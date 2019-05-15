@@ -24,12 +24,17 @@ if __name__ == "__main__":
     # Optional statement to configure preferred GPU. Available only in GPU version.
     # pydarknet.set_cuda_device(0)
 
-    #net = Detector(bytes("hscc.cfg/yolov3.cfg", encoding="utf-8"), bytes("hscc.cfg/weights/yolov3_10000.weights", encoding="utf-8"), 0,
-    #               bytes("hscc.cfg/hscc.data", encoding="utf-8"))
-    net = Detector(bytes("hscc.cfg/yolov3-tiny.cfg", encoding="utf-8"), bytes("hscc.cfg/weights/yolov3-tiny.weights", encoding="utf-8"), 0,
-                   bytes("hscc.cfg/hscc.data", encoding="utf-8"))
-    #net = Detector(bytes("hscc.cfg/yolov3-tiny.cfg", encoding="utf-8"), bytes("hscc.cfg/weights/yolov3-tiny.weights", encoding="utf-8"), 0,
-    #               bytes("hscc.cfg/coco.data", encoding="utf-8"))
+    #cfg_file = "hscc.cfg/yolov3.cfg"
+    #weights_file = "hscc.cfg/weights/yolov3_10000.weights"
+    cfg_file = "hscc.cfg/yolov3-tiny.cfg"
+    weights_file = "hscc.cfg/weights/yolov3-tiny_100000.weights"
+    #cfg_file = "hscc.cfg/yolov2.cfg"
+    #weights_file = "hscc.cfg/weights/yolov2_10000.weights"
+
+    data_file = "hscc.cfg/hscc.data"
+
+    net = Detector(bytes(cfg_file, encoding="utf-8"), bytes(weights_file, encoding="utf-8"), 0,
+                    bytes(data_file, encoding="utf-8"))
 
     cap = cv2.VideoCapture("test.mp4")
     mot_tracker = sort.Sort() 
@@ -54,7 +59,7 @@ if __name__ == "__main__":
             end_time = time.time()
             #print("Elapsed Time:",end_time-start_time)
 
-            print(results)
+            print("results : {}".format(results))
             detections = list()
             for cat, score, bounds in results:
                 x, y, w, h = bounds
@@ -65,8 +70,9 @@ if __name__ == "__main__":
             track_bbs_ids = mot_tracker.update(detections)
             fusion_model.fusion_model(track_bbs_ids)
 
-            #print(track_bbs_ids)
+            print("track_bbs_ids : {}".format(track_bbs_ids))
 
+        frame = fusion_model.draw_path(frame, track_bbs_ids)
         frame = draw_box(frame, track_bbs_ids)
         #sender.send_frame(frame)
 
