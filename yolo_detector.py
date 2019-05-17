@@ -59,7 +59,7 @@ if __name__ == "__main__":
             end_time = time.time()
             #print("Elapsed Time:",end_time-start_time)
 
-            print("results : {}".format(results))
+            #print("results : {}".format(results))
             detections = list()
             for cat, score, bounds in results:
                 x, y, w, h = bounds
@@ -70,7 +70,7 @@ if __name__ == "__main__":
             track_bbs_ids = mot_tracker.update(detections)
             fusion_model.fusion_model(track_bbs_ids)
 
-            print("track_bbs_ids : {}".format(track_bbs_ids))
+            #print("track_bbs_ids : {}".format(track_bbs_ids))
 
         frame = fusion_model.draw_path(frame, track_bbs_ids)
         frame = draw_box(frame, track_bbs_ids)
