@@ -1,5 +1,8 @@
 import time
 
+import glob
+import os
+
 import cv2
 import numpy as np
 
@@ -11,6 +14,11 @@ from fastdtw import fastdtw
 beacon_location = [[206.30429, 567.3016], [306.30429, 667.3016]]
 beacon_on_image = np.array([[1824, 840], [1786, 215], [272, 258], [190, 893]], dtype = "float32")
 beacon_on_world = np.array([[540, 1100], [540, 100], [10, 100], [10, 1100]], dtype = "float32")
+
+beacon_data_dir = "beacon_dataset/"
+
+username_file = "username.txt"
+username_table = dict()
 
 beacon_history = dict()
 yolo_history = dict()
@@ -32,13 +40,84 @@ def convert_coordinate(pts, transform_matrix):
 
     return convert_pts
 
+def get_username():
+
+    if os.path.exists(username_file):
+
+        with open(username_file, 'r') as f:
+
+            for line in f.readlines():
+
+                l = line.strip().split("=")
+                id = l[0]
+                username = l[1]
+                username_table[id] = username
+
+    print(username_table)
+
+def get_yolo_history():
+    return yolo_history
+
+def get_beacon_history():
+    return beacon_history
+
+def get_beacon_data():
+
+    beacon_dataset = dict()
+
+    if os.path.isdir(beacon_data_dir):
+
+        all_beacon_data = glob.glob(beacon_data_dir + '*')
+        #print(all_beacon_data)
+
+        for beacon_data in all_beacon_data:
+
+            with open(beacon_data, 'r') as f:
+
+                id = os.path.basename(beacon_data).split('.')[0]
+                #print("id : {}".format(id))
+                
+                l = f.readline().strip()
+                l = l.split(",")
+                pt = [int(a) for a in l]
+                #print(pt)
+                beacon_dataset[id] = pt
+
+    return beacon_dataset
+
 def fusion_model(track_bbs_ids):
 
-    transform_matrix = generate_transform_matrix(beacon_on_image, beacon_on_world)
+    # generate transform matrix image -> world
+    #transform_matrix = generate_transform_matrix(beacon_on_image, beacon_on_world)
+    # generate transform matrix world -> image
+    transform_matrix = generate_transform_matrix(beacon_on_world, beacon_on_image)
 
     existe_yolo_id = list()
     existe_beacon_id = list()
 
+    beacon_dataset = get_beacon_data()
+    print("beacon_dataset : {}".format(beacon_dataset))
+
+    # store beacon data
+    for beacon_id in beacon_dataset.keys():
+            
+        x_b = beacon_dataset[beacon_id][0]
+        y_b = beacon_dataset[beacon_id][1]
+
+        pts = [x_b, y_b]
+        pts = np.array([pts], dtype = "float32")
+        pts = np.array([pts])
+        convert_pts = convert_coordinate(pts, transform_matrix)
+
+        convert_x_b = convert_pts[0][0][0]
+        convert_y_b = convert_pts[0][0][1]
+
+        if beacon_id not in beacon_history:
+            beacon_history[beacon_id] = list()
+        #beacon_history[beacon_id].append([x_b, y_b])
+        beacon_history[beacon_id].append([convert_x_b, convert_y_b])
+
+    # store yolo data
     for det in track_bbs_ids:
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
@@ -48,12 +127,22 @@ def fusion_model(track_bbs_ids):
         y = (y1 + y2) / 2
         pts = [x, y]
         existe_yolo_id.append(id)
-        existe_beacon_id.append(id)
+        #existe_beacon_id.append(id)
 
-        pts = np.array([pts], dtype = "float32")
+        '''pts = np.array([pts], dtype = "float32")
         pts = np.array([pts])
-        convert_pts = convert_coordinate(pts, transform_matrix)
-        x_b = convert_pts[0][0][0] + 250
+        convert_pts = convert_coordinate(pts, transform_matrix)'''
+
+        #convert_x = convert_pts[0][0][0]
+        #convert_y = convert_pts[0][0][1]
+
+        if id not in yolo_history:
+            yolo_history[id] = list()
+        #yolo_history[id].append([convert_x, convert_y])
+        yolo_history[id].append([x, y])
+        
+
+        '''x_b = convert_pts[0][0][0] + 250
         y_b = convert_pts[0][0][1] + 100
 
         if id in yolo_history:
@@ -66,7 +155,7 @@ def fusion_model(track_bbs_ids):
             beacon_history[id].append([x_b, y_b])
         else:
             beacon_history[id] = list()
-            beacon_history[id].append([x_b, y_b])
+            beacon_history[id].append([x_b, y_b])'''
 
     # yolo id disappear
     disappear_yolo_id = list()
@@ -80,14 +169,14 @@ def fusion_model(track_bbs_ids):
 
 
     # beacon id disappear
-    disappear_beacon_id = list()
+    '''disappear_beacon_id = list()
 
     for beacon_id in beacon_history.keys():
         if beacon_id not in existe_beacon_id:
             disappear_beacon_id.append(beacon_id)
 
     for beacon_id in disappear_beacon_id:
-        beacon_history.pop(beacon_id, None)
+        beacon_history.pop(beacon_id, None)'''
 
 
     #print("yolo_history : {}".format(yolo_history))
@@ -125,62 +214,32 @@ def fusion_model(track_bbs_ids):
 
     #print(dtw_variance)
 
+    # sort by variance large -> small
+    # largest variance has more priority to choose yolo id
     sorted_dtw_variance = sorted([(value, key) for (key, value) in dtw_variance.items()], reverse=True)
     #print(sorted_dtw_variance)
 
     fusion_result = dict()
 
     for i in range(len(sorted_dtw_variance)):
+
+        # get beacon id and its row
         current_id = sorted_dtw_variance[i][1]
-        print(current_id)
-
         sorted_dtw_table = dtw_table[current_id]
+        # sort by distance small -> large and choose smallest distance yolo id (fusion id)
         sorted_dtw_table = sorted([(value, key) for (key, value) in sorted_dtw_table.items()], reverse=False)
-
         fusion_id = sorted_dtw_table[0][1]
 
-        fusion_result[current_id] = fusion_id
+        # create fusion result { fusion id (yolo id) : username by beacon id }
+        fusion_result[fusion_id] = username_table[current_id]
 
+        # remove yolo id already choosed from table
         for beacon_id in beacon_history.keys():
             dtw_table[beacon_id].pop(fusion_id, None)
 
-    print(fusion_result)    
+    print("fusion_result : {}".format(fusion_result))
 
-    #distance1, path = fastdtw(p1, b1, dist=euclidean)
-    #print("p1 - b1 : {}".format(distance1))
-    #distance2, path = fastdtw(p1, b2, dist=euclidean)
-    #print("p1 - b2 : {}".format(distance2))
-    #print("1 : {}".format(distance2 - distance1))
-
-    #distance1, path = fastdtw(p2, b1, dist=euclidean)
-    #print("p2 - b1 : {}".format(distance1))
-    #distance2, path = fastdtw(p2, b2, dist=euclidean)
-    #print("p2 - b2 : {}".format(distance2))
-    #print("2 : {}".format(distance2 - distance1))
-
-def draw_path(frame, track_bbs_ids):
-
-    exist_id = list()
-
-    for det in track_bbs_ids:
-        x1, y1, x2, y2, id = [p for p in det]
-        exist_id.append(id)
-
-    for beacon_id in beacon_history.keys():
-        if beacon_id not in exist_id:
-            continue
-        b = beacon_history[beacon_id]
-        for pt in b:
-            cv2.putText(frame, str(beacon_id), (int(pt[0]), int(pt[1])), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 1, cv2.LINE_AA)
-    for yolo_id in yolo_history.keys():
-        if yolo_id not in exist_id:
-            continue
-        p = yolo_history[yolo_id]
-        for pt in p:
-            cv2.putText(frame, str(yolo_id), (int(pt[0]), int(pt[1])), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1, cv2.LINE_AA)
-
-    return frame
-
+    return fusion_result
 
 def do_fustion(id, pts):
 
