@@ -31,4 +31,4 @@ if __name__ == "__main__":
     
     yolo_server.init_yolo_server()
     time.sleep(1)
-    app.run(host='0.0.0.0', port=8090, debug=True)
+    app.run(host='0.0.0.0', port=8090, threaded=True, debug=True, use_reloader=False)

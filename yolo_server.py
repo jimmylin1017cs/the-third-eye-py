@@ -95,7 +95,7 @@ def init_yolo_server():
     
     host = "0.0.0.0"
     port = 8091
-    print(YoloServer.is_initial)
+    print("YoloServer.is_initial : {}".format(YoloServer.is_initial))
 
     if(not YoloServer.is_initial):
         YoloServer(host, port).start()
