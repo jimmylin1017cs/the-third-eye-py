@@ -193,9 +193,12 @@ def fusion_model(track_bbs_ids):
     dtw_table = dict()
     for beacon_id in beacon_history.keys():
         b = beacon_history[beacon_id]
+        b_len = len(b)
         for yolo_id in yolo_history.keys():
             p = yolo_history[yolo_id]
-            distance, path = fastdtw(p, b, dist=euclidean)
+            p_len = len(p)
+            min_len = min(b_len, p_len)
+            distance, path = fastdtw(p[-min_len:], b[-min_len:], dist=euclidean)
             if beacon_id not in dtw_table:
                 dtw_table[beacon_id] = dict()
             dtw_table[beacon_id][yolo_id] = distance

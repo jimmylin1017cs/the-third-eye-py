@@ -10,6 +10,8 @@ import numpy as np
 import sort
 import fusion_model
 
+sender_enable = False
+
 if __name__ == "__main__":
     # Optional statement to configure preferred GPU. Available only in GPU version.
     # pydarknet.set_cuda_device(0)
@@ -32,8 +34,9 @@ if __name__ == "__main__":
     dest_ip = "127.0.0.1"
     dest_port = 8091
 
-    sender = frame_sender.FrameSender(dest_ip, dest_port)
-    sender.start()
+    if sender_enable:
+        sender = frame_sender.FrameSender(dest_ip, dest_port)
+        sender.start()
 
     fusion_model.get_username()
 
@@ -73,7 +76,9 @@ if __name__ == "__main__":
         #frame = draw_utils.draw_beacon_path(frame, beacon_history)
 
         frame = draw_utils.draw_box(frame, track_bbs_ids, fusion_result)
-        sender.send_frame(frame)
+
+        if sender_enable:
+            sender.send_frame(frame)
 
         cv2.namedWindow("preview",0)
         cv2.resizeWindow("preview", 640, 480)
