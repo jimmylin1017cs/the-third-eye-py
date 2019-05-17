@@ -1,24 +1,14 @@
 import time
 import frame_sender
 
+#import iottalk_package.DAI_push as DAI_push
+import draw_package.draw_utils as draw_utils
+
 from pydarknet import Detector, Image
 import cv2
 import numpy as np
 import sort
 import fusion_model
-
-def draw_box(frame, track_bbs_ids):
-
-    for det in track_bbs_ids:
-        #det = track_bbs_ids[i]
-        #print("det: {}".format(det))
-        x1, y1, x2, y2, id = [int(p) for p in det]
-        cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
-        cv2.putText(frame, str(id), (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
-        #cv2.putText(frame, str(cat.decode("utf-8")), (int(x-w/2), int(y-h/2)), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0))
-
-    return frame
-
 
 if __name__ == "__main__":
     # Optional statement to configure preferred GPU. Available only in GPU version.
@@ -26,10 +16,10 @@ if __name__ == "__main__":
 
     #cfg_file = "hscc.cfg/yolov3.cfg"
     #weights_file = "hscc.cfg/weights/yolov3_10000.weights"
-    cfg_file = "hscc.cfg/yolov3-tiny.cfg"
-    weights_file = "hscc.cfg/weights/yolov3-tiny_100000.weights"
-    #cfg_file = "hscc.cfg/yolov2.cfg"
-    #weights_file = "hscc.cfg/weights/yolov2_10000.weights"
+    #cfg_file = "hscc.cfg/yolov3-tiny.cfg"
+    #weights_file = "hscc.cfg/weights/yolov3-tiny_100000.weights"
+    cfg_file = "hscc.cfg/yolov2.cfg"
+    weights_file = "hscc.cfg/weights/yolov2_10000.weights"
 
     data_file = "hscc.cfg/hscc.data"
 
@@ -42,8 +32,10 @@ if __name__ == "__main__":
     dest_ip = "127.0.0.1"
     dest_port = 8091
 
-    #sender = frame_sender.FrameSender(dest_ip, dest_port)
-    #sender.start()
+    sender = frame_sender.FrameSender(dest_ip, dest_port)
+    sender.start()
+
+    fusion_model.get_username()
 
     while True:
         r, frame = cap.read()
@@ -68,13 +60,20 @@ if __name__ == "__main__":
             
             #detections = np.array(detections)
             track_bbs_ids = mot_tracker.update(detections)
-            fusion_model.fusion_model(track_bbs_ids)
+            fusion_result = fusion_model.fusion_model(track_bbs_ids)
 
             #print("track_bbs_ids : {}".format(track_bbs_ids))
 
-        frame = fusion_model.draw_path(frame, track_bbs_ids)
-        frame = draw_box(frame, track_bbs_ids)
-        #sender.send_frame(frame)
+        #yolo_history = fusion_model.get_yolo_history()
+        #print("yolo_history : {}".format(yolo_history))
+        #frame = draw_utils.draw_yolo_path(frame, yolo_history)
+
+        #beacon_history = fusion_model.get_beacon_history()
+        #print("beacon_history : {}".format(beacon_history))
+        #frame = draw_utils.draw_beacon_path(frame, beacon_history)
+
+        frame = draw_utils.draw_box(frame, track_bbs_ids, fusion_result)
+        sender.send_frame(frame)
 
         cv2.namedWindow("preview",0)
         cv2.resizeWindow("preview", 640, 480)
