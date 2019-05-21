@@ -222,7 +222,7 @@ def fusion_model(track_bbs_ids):
     sorted_dtw_variance = sorted([(value, key) for (key, value) in dtw_variance.items()], reverse=True)
     #print(sorted_dtw_variance)
 
-    fusion_result = dict()
+    fusion_map = dict()
 
     for i in range(len(sorted_dtw_variance)):
 
@@ -234,15 +234,30 @@ def fusion_model(track_bbs_ids):
         fusion_id = sorted_dtw_table[0][1]
 
         # create fusion result { fusion id (yolo id) : username by beacon id }
-        fusion_result[fusion_id] = username_table[current_id]
+        fusion_map[fusion_id] = username_table[current_id]
 
         # remove yolo id already choosed from table
         for beacon_id in beacon_history.keys():
             dtw_table[beacon_id].pop(fusion_id, None)
 
-    print("fusion_result : {}".format(fusion_result))
+    print("fusion_map : {}".format(fusion_map))
+
+    fusion_result = []
+    for det in track_bbs_ids:
+
+        x1, y1, x2, y2, id = [int(p) for p in det]
+
+        if id in fusion_map:
+            username = fusion_map[id]
+        else:
+            username = "unknown"
+
+        fusion_result.append([x1, y1, x2, y2, username])
 
     return fusion_result
+
+
+
 
 def do_fustion(id, pts):
 
