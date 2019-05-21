@@ -8,7 +8,6 @@ from ast import literal_eval
 
 #from requests.utils import requote_uri
 
-
 #ServerURL = 'http://IP:9999' #with no secure connection
 #ServerURL = 'https://DomainName' #with SSL connection
 ServerURL = 'http://140.113.86.143:9999'
@@ -24,6 +23,40 @@ DAN.device_registration_with_retry(ServerURL, Reg_addr)
 #cv2.setUseOptimized(True)
 
 #cap = cv2.VideoCapture('time_counter.flv')
+
+def send_data_to_iottalk(time_stamp, track_bbs_ids):
+
+    try:
+
+        obj_box = []
+        obj_box.append(time_stamp)
+
+        for det in track_bbs_ids:
+
+            x1, y1, x2, y2, id = [int(p) for p in det]
+
+            person = []
+            person.append(id)
+            person.append(x1)
+            person.append(y1)
+            person.append(x2)
+            person.append(y2)
+
+            obj_box.append(person)
+
+        DAN.push('Box-I', str(obj_box))
+        print('push')
+        
+    except Exception as e:
+        print(e)
+        if str(e).find('mac_addr not found:') != -1:
+            print('Reg_addr is not found. Try to re-register...')
+            DAN.device_registration_with_retry(ServerURL, Reg_addr)
+        else:
+            print('Connection failed due to unknow reasons.')
+            #time.sleep(1)
+    #time.sleep(0.02)
+
 
 def send_boxes_to_iottalk(boxes):
 
