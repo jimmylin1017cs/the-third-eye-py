@@ -1,4 +1,6 @@
 __pycache__/
 data/
 hscc.cfg/
-test.mp4
+*.mp4
+*.avi
+*.log
