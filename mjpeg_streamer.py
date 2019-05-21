@@ -13,11 +13,11 @@ def index():
 def gen():
 
     while True:
-        frame_buffer = yolo_server.get_frame_buffer()
+        frame = yolo_server.get_frame(1)
         client_amount = yolo_server.yolo_client_amount()
-        if(client_amount > 0 and frame_buffer is not None):
+        if(client_amount > 0 and frame is not None):
             try:
-                jpg_string = cv2.imencode('.jpg', frame_buffer)[1].tostring()
+                jpg_string = cv2.imencode('.jpg', frame)[1].tostring()
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + jpg_string + b'\r\n\r\n')
             except Exception as e:
                 print("Opencv Error : {}".format(e))
