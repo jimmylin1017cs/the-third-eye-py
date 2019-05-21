@@ -23,46 +23,61 @@ if __name__ == "__main__":
 
         '''prev_time_stamp = time_stamp
         time_stamp = time.time()
-        fps = 1 / (time_stamp - prev_time_stamp)
+        fps = 1 / (time_stamp - prev_time_stamp)'''
 
-        print(prev_time_stamp)
-        print(time_stamp)
+        #print(prev_time_stamp)
+        #print(time_stamp)
 
-        print("FPS : {}".format(str(fps)))'''
+        #print("FPS : {}".format(str(fps)))
 
         #frame_time_stamp = yolo_server.get_frame_time_stamp()
         #frame_time_stamp = str(frame_time_stamp)
         frame_buffer = yolo_server.get_frame_buffer()
         #time.sleep(1)
-        time_stamp, track_bbs_ids = DAI_pull.receive_data_from_iottalk()
-        time_stamp = str(time_stamp)
-        print(time_stamp)
-        print(track_bbs_ids)
+        frame_time_stamp, track_bbs_ids = DAI_pull.receive_data_from_iottalk()
+        frame_time_stamp = str(frame_time_stamp)
+        #print(frame_time_stamp)
+        #print(track_bbs_ids)
+        #print(frame_buffer)
+
+        client_id = 1
 
         if frame_buffer is not None:
 
-            #frame_buffer[frame_time_stamp] = frame
+            if client_id in frame_buffer:
 
-            '''cv2.namedWindow("preview",0)
-            cv2.resizeWindow("preview", 640, 480)
-            cv2.imshow("preview", frame_buffer)
+                frame_buffer = frame_buffer[client_id]
 
-            k = cv2.waitKey(1)
-            if k == 0xFF & ord("q"):
-                break'''
+                #frame_buffer[frame_time_stamp] = frame
 
-            if time_stamp is not None and time_stamp in frame_buffer:
+                #print(frame_buffer[1])
 
-                print(time_stamp)
-                print(track_bbs_ids)
-
-                fusion_result = fusion_model.fusion_model(track_bbs_ids)
-                frame = draw_utils.draw_fusion_box(frame_buffer[time_stamp], fusion_result)
-
-                cv2.namedWindow("preview",0)
+                '''cv2.namedWindow("preview",0)
                 cv2.resizeWindow("preview", 640, 480)
-                cv2.imshow("preview", frame)
+                cv2.imshow("preview", frame_buffer)
 
                 k = cv2.waitKey(1)
                 if k == 0xFF & ord("q"):
-                    break
+                    break'''
+
+                if frame_time_stamp is not None and frame_time_stamp in frame_buffer:
+
+                    #print(frame_time_stamp)
+                    #print(track_bbs_ids)
+
+                    fusion_result = fusion_model.fusion_model(track_bbs_ids)
+                    frame = draw_utils.draw_fusion_box(frame_buffer[frame_time_stamp], fusion_result)
+
+                    prev_time_stamp = time_stamp
+                    time_stamp = time.time()
+                    fps = 1 / (time_stamp - prev_time_stamp)
+
+                    print("FPS : {}".format(str(fps)))
+
+                    cv2.namedWindow("preview",0)
+                    cv2.resizeWindow("preview", 640, 480)
+                    cv2.imshow("preview", frame)
+
+                    k = cv2.waitKey(1)
+                    if k == 0xFF & ord("q"):
+                        break

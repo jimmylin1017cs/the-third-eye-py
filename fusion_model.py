@@ -96,7 +96,7 @@ def fusion_model(track_bbs_ids):
     existe_beacon_id = list()
 
     beacon_dataset = get_beacon_data()
-    print("beacon_dataset : {}".format(beacon_dataset))
+    #print("beacon_dataset : {}".format(beacon_dataset))
 
     # store beacon data
     for beacon_id in beacon_dataset.keys():
@@ -197,7 +197,7 @@ def fusion_model(track_bbs_ids):
         for yolo_id in yolo_history.keys():
             p = yolo_history[yolo_id]
             p_len = len(p)
-            min_len = min(b_len, p_len)
+            min_len = min(b_len, p_len, 20)
             distance, path = fastdtw(p[-min_len:], b[-min_len:], dist=euclidean)
             if beacon_id not in dtw_table:
                 dtw_table[beacon_id] = dict()
@@ -240,7 +240,7 @@ def fusion_model(track_bbs_ids):
         for beacon_id in beacon_history.keys():
             dtw_table[beacon_id].pop(fusion_id, None)
 
-    print("fusion_map : {}".format(fusion_map))
+    #print("fusion_map : {}".format(fusion_map))
 
     fusion_result = []
     for det in track_bbs_ids:
