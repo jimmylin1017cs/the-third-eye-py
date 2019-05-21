@@ -5,7 +5,29 @@ import numpy as np
 from scipy.spatial.distance import euclidean
 from fastdtw import fastdtw
 
-def draw_box(frame, track_bbs_ids, fusion_result):
+def draw_box(frame, track_bbs_ids):
+
+    for det in track_bbs_ids:
+        #det = track_bbs_ids[i]
+        #print("det: {}".format(det))
+        x1, y1, x2, y2, id = [int(p) for p in det]
+        cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
+        cv2.putText(frame, str(id), (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
+
+    return frame
+
+def draw_fusion_box(frame, fusion_result):
+
+    for det in fusion_result:
+        #det = track_bbs_ids[i]
+        #print("det: {}".format(det))
+        x1, y1, x2, y2, username = [int(p) if isinstance(p, int) else p for p in det]
+        cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
+        cv2.putText(frame, username, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
+
+    return frame
+
+'''def draw_fusion_box(frame, track_bbs_ids, fusion_result):
 
     for det in track_bbs_ids:
         #det = track_bbs_ids[i]
@@ -20,7 +42,7 @@ def draw_box(frame, track_bbs_ids, fusion_result):
             cv2.putText(frame, "unknown", (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
         #cv2.putText(frame, str(cat.decode("utf-8")), (int(x-w/2), int(y-h/2)), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0))
 
-    return frame
+    return frame'''
 
 def draw_yolo_path(frame, yolo_history):
 
