@@ -50,7 +50,8 @@ if __name__ == "__main__":
     sender.start()
 
     #room_id = random.randint(0, 1000)
-    room_id = int((time_stamp * 100000) % 100)
+    #room_id = int((time_stamp * 100000) % 100)
+    room_id = 2
 
     while True:
         r, frame = cap.read()

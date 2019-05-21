@@ -10,10 +10,10 @@ app = Flask(__name__)
 def index():
     return render_template('stream.html')
 
-def gen():
+def gen(client_id):
 
     while True:
-        frame = yolo_server.get_frame(1)
+        frame = yolo_server.get_frame(client_id)
         client_amount = yolo_server.yolo_client_amount()
         if(client_amount > 0 and frame is not None):
             try:
@@ -25,7 +25,11 @@ def gen():
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(gen(1), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/video_feed2')
+def video_feed2():
+    return Response(gen(2), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
     

@@ -148,6 +148,9 @@ def get_frame_buffer():
 
 def get_frame(client_id):
 
+    if YoloHandler.frame_buffer is None:
+        return None
+    
     if client_id in YoloHandler.frame_buffer:
 
         frame_buffer = YoloHandler.frame_buffer[client_id]
