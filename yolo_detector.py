@@ -69,7 +69,7 @@ if __name__ == "__main__":
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_fps = int(cap.get(cv2.CAP_PROP_FPS))
-        print("frame_width : {}, frame_height : {}, frame_fps : {}".format(frame_width, frame_height, frame_fps))
+        #print("frame_width : {}, frame_height : {}, frame_fps : {}".format(frame_width, frame_height, frame_fps))
         out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), frame_fps, (frame_width, frame_height))
     
     # initial save data
@@ -136,7 +136,7 @@ if __name__ == "__main__":
                 fusion_result = fusion_model.fusion_model(track_bbs_ids)
 
             #print("track_bbs_ids : {}".format(track_bbs_ids))
-            print("detections_with_class : {}".format(detections_with_class))
+            #print("detections_with_class : {}".format(detections_with_class))
 
             # [time_stamp, ]
 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
                 for det in track_bbs_ids:
                     x1, y1, x2, y2, id = [int(p) for p in det]
                     data_log = [time_stamp, "person", id, (x1, y1, x2, y2), "Event"]
-                    print("data_log : {}".format(data_log))
+                    #print("data_log : {}".format(data_log))
                     yolo_data_file.write("{}\n".format(str(data_log)))
             elif SAVE_DATA:
                 yolo_data_file.write("{}\n".format(str(track_bbs_ids)))

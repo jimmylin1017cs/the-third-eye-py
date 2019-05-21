@@ -106,7 +106,9 @@ class YoloHandler(threading.Thread):
             jpg_string = np.fromstring(data, np.uint8)
             # convert jpg to numpy image
             frame = cv2.imdecode(jpg_string, cv2.IMREAD_COLOR)
+
             self.lock.acquire()
+
             if YoloHandler.frame_buffer is None:
                 YoloHandler.frame_buffer = dict()
 
@@ -114,6 +116,15 @@ class YoloHandler(threading.Thread):
                 YoloHandler.frame_buffer[client_id] = dict()
 
             YoloHandler.frame_buffer[client_id][str(time_stamp)] = frame
+
+            if len(YoloHandler.frame_buffer[client_id]) > 20:
+                
+                time_stamp_list = list(YoloHandler.frame_buffer[client_id].keys())
+                time_stamp_list.sort()
+
+                for i in range(20):
+                    del YoloHandler.frame_buffer[client_id][time_stamp_list[i]]
+            
             self.lock.release()
 
             #cv2.imshow(str(self.socket), YoloHandler.frame_buffer)

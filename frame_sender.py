@@ -63,5 +63,6 @@ if __name__ == "__main__":
         print("FPS : {}".format(str(fps)))
 
         if r:
-
             sender.send_frame(room_id, time_stamp, frame)
+        else:
+            break
