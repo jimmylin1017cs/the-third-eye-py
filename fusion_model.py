@@ -121,8 +121,8 @@ def fusion_model(track_bbs_ids):
     for det in track_bbs_ids:
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
-        #x1, y1, x2, y2, id = [int(p) for p in det]
-        x1, y1, x2, y2, id = [p for p in det]
+        #x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
+        x1, y1, x2, y2, id, cat = [p for p in det]
         x = (x1 + x2) / 2
         y = (y1 + y2) / 2
         pts = [x, y]
@@ -245,7 +245,7 @@ def fusion_model(track_bbs_ids):
     fusion_result = []
     for det in track_bbs_ids:
 
-        x1, y1, x2, y2, id = [int(p) for p in det]
+        x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
 
         if id in fusion_map:
             username = fusion_map[id]

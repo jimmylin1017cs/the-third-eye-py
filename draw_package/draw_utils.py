@@ -10,9 +10,9 @@ def draw_box(frame, track_bbs_ids):
     for det in track_bbs_ids:
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
-        x1, y1, x2, y2, id = [int(p) for p in det]
+        x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
         cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
-        cv2.putText(frame, str(id), (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
+        cv2.putText(frame, str(id) + " : " + cat, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
 
     return frame
 
@@ -21,7 +21,7 @@ def draw_fusion_box(frame, fusion_result):
     for det in fusion_result:
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
-        x1, y1, x2, y2, username = [int(p) if isinstance(p, int) else p for p in det]
+        x1, y1, x2, y2, username, cat = [int(p) if isinstance(p, int) else p for p in det]
         cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
         cv2.putText(frame, username, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
 
@@ -32,7 +32,7 @@ def draw_fusion_box(frame, fusion_result):
     for det in track_bbs_ids:
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
-        x1, y1, x2, y2, id = [int(p) for p in det]
+        x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
         cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
 
         if id in fusion_result:

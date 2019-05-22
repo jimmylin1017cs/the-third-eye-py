@@ -33,7 +33,7 @@ def send_data_to_iottalk(time_stamp, track_bbs_ids):
 
         for det in track_bbs_ids:
 
-            x1, y1, x2, y2, id = [int(p) for p in det]
+            x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
 
             person = []
             person.append(id)
@@ -46,7 +46,7 @@ def send_data_to_iottalk(time_stamp, track_bbs_ids):
 
         DAN.push('Box-I', str(obj_box))
         print('push')
-        
+
     except Exception as e:
         print(e)
         if str(e).find('mac_addr not found:') != -1:

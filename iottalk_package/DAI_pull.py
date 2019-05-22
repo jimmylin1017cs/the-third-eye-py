@@ -49,7 +49,9 @@ def receive_data_from_iottalk():
             for i in range(1, len(box_list)):
 
                 det = box_list[i]
-                x1, y1, x2, y2, id = [int(p) for p in det]
+
+                # iot talk did not push category
+                x1, y1, x2, y2, id = [int(p) if isinstance(p, int) else p for p in det]
                 
                 track_bbs_ids.append([x1, y1, x2, y2, id])
 

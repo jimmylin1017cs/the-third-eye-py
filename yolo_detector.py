@@ -1,15 +1,16 @@
-import time
-import frame_sender
-
-import draw_package.draw_utils as draw_utils
-
 from pydarknet import Detector, Image
+
+import os
+import time
 import cv2
 import numpy as np
-import sort
-import fusion_model
-
 import configparser
+
+import sort_with_category
+
+import frame_sender
+import fusion_model
+import draw_package.draw_utils as draw_utils
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -42,7 +43,26 @@ print("SAVE_DATA = {}".format(SAVE_DATA))
 YOLO_ID = config.get('Yolo_Config', 'Yolo_ID')
 YOLO_ID = int(YOLO_ID)
 
+category_table = []
+
+def get_category_table():
+
+    category_file = "hscc.cfg/hscc.names"
+
+    if os.path.exists(category_file):
+
+        with open(category_file, 'r') as f:
+
+            for line in f.readlines():
+
+                category = line.strip()
+
+                category_table.append(category)
+
+    print(category_table)
+
 if __name__ == "__main__":
+
     # Optional statement to configure preferred GPU. Available only in GPU version.
     # pydarknet.set_cuda_device(0)
 
@@ -62,7 +82,10 @@ if __name__ == "__main__":
     cap = cv2.VideoCapture("test.mp4")
 
     # initial sort class
-    mot_tracker = sort.Sort() 
+    mot_tracker = sort_with_category.Sort() 
+
+    # initial category table
+    get_category_table()
 
     # initial save video
     if SAVE_VIDEO:
@@ -121,33 +144,47 @@ if __name__ == "__main__":
 
             #print("results : {}".format(results))
             detections = list()
-            detections_with_class = list()
+            detections_with_category = list()
             for cat, score, bounds in results:
+                cat = cat.decode("utf-8")
                 x, y, w, h = bounds
                 #detections.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), score])
-                detections.append([x-w/2, y-h/2, x+w/2, y+h/2, score])
-                detections_with_class.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), cat, score])
+                #detections.append([x-w/2, y-h/2, x+w/2, y+h/2, score])
+                category_id = category_table.index(cat)
+                detections_with_category.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), score, category_id])
                 #detections.append([x, y, w, h, score])
             
             #detections = np.array(detections)
-            track_bbs_ids = mot_tracker.update(detections)
+            #track_bbs_ids = mot_tracker.update(detections)
+
+            detections_with_category = np.array(detections_with_category)
+            track_bbs_ids = mot_tracker.update(detections_with_category)
+
+            # re-create the track_bbs_ids with string type catefory
+            track_bbs_ids = list(track_bbs_ids)
+            track_bbs_ids_copy = track_bbs_ids.copy()
+            track_bbs_ids.clear()
+            for det in track_bbs_ids_copy:
+                x1, y1, x2, y2, id, cat = [int(p) for p in det]
+                track_bbs_ids.append([x1, y1, x2, y2, id, category_table[cat]])
 
             if ENABLE_FUSION_MODEL:
                 fusion_result = fusion_model.fusion_model(track_bbs_ids)
 
             #print("track_bbs_ids : {}".format(track_bbs_ids))
-            #print("detections_with_class : {}".format(detections_with_class))
+            #print("detections_with_category : {}".format(detections_with_category))
 
             # [time_stamp, ]
 
-            if SAVE_DATA and ENABLE_FUSION_MODEL:
+            if SAVE_DATA:
                 for det in track_bbs_ids:
-                    x1, y1, x2, y2, id = [int(p) for p in det]
-                    data_log = [time_stamp, "person", id, (x1, y1, x2, y2), "Event"]
+                    x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
+                    if ENABLE_FUSION_MODEL:
+                        data_log = []
+                    else:
+                        data_log = [time_stamp, cat, id, (x1, y1, x2, y2), "Event"]
                     #print("data_log : {}".format(data_log))
                     yolo_data_file.write("{}\n".format(str(data_log)))
-            elif SAVE_DATA:
-                yolo_data_file.write("{}\n".format(str(track_bbs_ids)))
 
         #yolo_history = fusion_model.get_yolo_history()
         #print("yolo_history : {}".format(yolo_history))
