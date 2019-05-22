@@ -4,7 +4,8 @@ import json
 import numpy as np
 import cv2
 import base64
-from ast import literal_eval
+#from ast import literal_eval
+import ast
 
 #from requests.utils import requote_uri
 
@@ -25,10 +26,9 @@ DAN.device_registration_with_retry(ServerURL, Reg_addr)
 
 def receive_data_from_iottalk():
 
-    #time.sleep(0.02)
-
     #print('start receive frame from iottalk')
     track_bbs_ids = []
+    time_stamp = None
 
     try:
 
@@ -49,13 +49,11 @@ def receive_data_from_iottalk():
             for i in range(1, len(box_list)):
 
                 det = box_list[i]
-
-                # iot talk did not push category
-                x1, y1, x2, y2, id = [int(p) if isinstance(p, int) else p for p in det]
+                id, x1, y1, x2, y2 = [int(p) for p in det]
                 
                 track_bbs_ids.append([x1, y1, x2, y2, id])
 
-        return track_bbs_ids
+        return (time_stamp, track_bbs_ids)
 
     except Exception as e:
         print(e)
