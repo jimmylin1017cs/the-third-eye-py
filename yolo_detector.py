@@ -104,6 +104,11 @@ if __name__ == "__main__":
     # initial save data
     if SAVE_DATA:
         yolo_data_file = open("save/yolo_" + str(YOLO_ID) + "_" + str(process_start_time_stamp) + ".log", 'w')
+        if ENABLE_FUSION_MODEL:
+            fusion_data_file = open("save/yolo_" + str(YOLO_ID) + "_fusion_" + str(process_start_time_stamp) + ".log", 'w')
+            sort_data_file = open("save/yolo_" + str(YOLO_ID) + "_sort_" + str(process_start_time_stamp) + ".log", 'w')
+        if ENABLE_SORT_ALGORITHM:
+            sort_data_file = open("save/yolo_" + str(YOLO_ID) + "_sort_" + str(process_start_time_stamp) + ".log", 'w')
 
     # initial sender
     if ENABLE_SENDER:
@@ -187,22 +192,29 @@ if __name__ == "__main__":
             # [time_stamp, ]
 
             if SAVE_DATA:
-                yolo_data_file.write("{} {}\n".format(str(time_stamp), str(len(results))))
+
+                # save fusion file
                 if ENABLE_FUSION_MODEL:
+                    fusion_data_file.write("{} {}\n".format(str(time_stamp), str(len(fusion_result))))
                     for det in fusion_result:
                         x1, y1, x2, y2, username = [int(p) if isinstance(p, int) else p for p in det]
                         data_log = [username, (x1, y1, x2, y2), "Event"]
-                        yolo_data_file.write("{}\n".format(str(data_log)))
-                elif ENABLE_SORT_ALGORITHM:
+                        fusion_data_file.write("{}\n".format(str(data_log)))
+                
+                # save sort file
+                if ENABLE_SORT_ALGORITHM or ENABLE_FUSION_MODEL:
+                    sort_data_file.write("{} {}\n".format(str(time_stamp), str(len(track_bbs_ids))))
                     for det in track_bbs_ids:
                         x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
                         data_log = [cat, id, (x1, y1, x2, y2), "Event"]
-                        yolo_data_file.write("{}\n".format(str(data_log)))
-                else:
-                    for det in detections_with_category:
-                        x1, y1, x2, y2, score, cat = [int(p) if isinstance(p, int) else p for p in det]
-                        data_log = [cat, (x1, y1, x2, y2), score]
-                        yolo_data_file.write("{}\n".format(str(data_log)))
+                        sort_data_file.write("{}\n".format(str(data_log)))
+
+                # save yolo file
+                yolo_data_file.write("{} {}\n".format(str(time_stamp), str(len(detections_with_category))))
+                for det in detections_with_category:
+                    x1, y1, x2, y2, score, cat = [int(p) if isinstance(p, int) else p for p in det]
+                    data_log = [cat, (x1, y1, x2, y2), score]
+                    yolo_data_file.write("{}\n".format(str(data_log)))
                 
 
         #yolo_history = fusion_model.get_yolo_history()
