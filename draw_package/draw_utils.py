@@ -5,7 +5,18 @@ import numpy as np
 from scipy.spatial.distance import euclidean
 from fastdtw import fastdtw
 
-def draw_box(frame, track_bbs_ids):
+def draw_box(frame, detections_with_category):
+
+    for det in detections_with_category:
+        print(det)
+        x1, y1, x2, y2, score, cat = [int(p) if isinstance(p, int) else p for p in det]
+        print(x1, y1, x2, y2, score, cat)
+        cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
+        cv2.putText(frame, cat, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
+
+    return frame
+
+def draw_sort_box(frame, track_bbs_ids):
 
     for det in track_bbs_ids:
         #det = track_bbs_ids[i]
@@ -21,7 +32,8 @@ def draw_fusion_box(frame, fusion_result):
     for det in fusion_result:
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
-        x1, y1, x2, y2, username, cat = [int(p) if isinstance(p, int) else p for p in det]
+        # fusion model only username, not have category
+        x1, y1, x2, y2, username = [int(p) if isinstance(p, int) else p for p in det]
         cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
         cv2.putText(frame, username, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
 

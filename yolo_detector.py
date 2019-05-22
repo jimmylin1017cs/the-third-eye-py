@@ -30,12 +30,16 @@ print("ENABLE_IOTTALK = {}".format(ENABLE_IOTTALK))
 
 ENABLE_FUSION_MODEL = config.getboolean('Yolo_Function', 'Enable_Fusion_Model')
 ENABLE_SORT_ALGORITHM = config.getboolean('Yolo_Function', 'Enable_Sort_Algorithm')
-SHOW_PREVIEW = config.getboolean('Yolo_Function', 'Show_Preview')
-SAVE_VIDEO = config.getboolean('Yolo_Function', 'Save_Video')
-SAVE_DATA = config.getboolean('Yolo_Function', 'Save_Data')
+ENABLE_DRAW_BOX = config.getboolean('Yolo_Function', 'Enable_Draw_Box')
+
 
 print("ENABLE_FUSION_MODEL = {}".format(ENABLE_FUSION_MODEL))
 print("ENABLE_SORT_ALGORITHM = {}".format(ENABLE_SORT_ALGORITHM))
+print("ENABLE_DRAW_BOX = {}".format(ENABLE_DRAW_BOX))
+
+SHOW_PREVIEW = config.getboolean('Yolo_Function', 'Show_Preview')
+SAVE_VIDEO = config.getboolean('Yolo_Function', 'Save_Video')
+SAVE_DATA = config.getboolean('Yolo_Function', 'Save_Data')
 print("SHOW_PREVIEW = {}".format(SHOW_PREVIEW))
 print("SAVE_VIDEO = {}".format(SAVE_VIDEO))
 print("SAVE_DATA = {}".format(SAVE_DATA))
@@ -62,6 +66,8 @@ def get_category_table():
     print(category_table)
 
 if __name__ == "__main__":
+
+    process_start_time_stamp = time.time()
 
     # Optional statement to configure preferred GPU. Available only in GPU version.
     # pydarknet.set_cuda_device(0)
@@ -93,11 +99,11 @@ if __name__ == "__main__":
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_fps = int(cap.get(cv2.CAP_PROP_FPS))
         #print("frame_width : {}, frame_height : {}, frame_fps : {}".format(frame_width, frame_height, frame_fps))
-        out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), frame_fps, (frame_width, frame_height))
+        out = cv2.VideoWriter("save/yolo_" + str(YOLO_ID) + "_" + str(process_start_time_stamp) + ".avi", cv2.VideoWriter_fourcc('M','J','P','G'), frame_fps, (frame_width, frame_height))
     
     # initial save data
     if SAVE_DATA:
-        yolo_data_file = open("yolo_" + str(YOLO_ID) + ".log", 'w')
+        yolo_data_file = open("save/yolo_" + str(YOLO_ID) + "_" + str(process_start_time_stamp) + ".log", 'w')
 
     # initial sender
     if ENABLE_SENDER:
@@ -143,30 +149,34 @@ if __name__ == "__main__":
             #print("Elapsed Time:",end_time-start_time)
 
             #print("results : {}".format(results))
-            detections = list()
             detections_with_category = list()
+            detections_with_category_id = list()
             for cat, score, bounds in results:
                 cat = cat.decode("utf-8")
                 x, y, w, h = bounds
                 #detections.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), score])
                 #detections.append([x-w/2, y-h/2, x+w/2, y+h/2, score])
+
+                #detections_with_category.append([x-w/2, y-h/2, x+w/2, y+h/2, score, cat])
+                detections_with_category.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), score, cat])
                 category_id = category_table.index(cat)
-                detections_with_category.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), score, category_id])
+                detections_with_category_id.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), score, category_id])
                 #detections.append([x, y, w, h, score])
             
             #detections = np.array(detections)
             #track_bbs_ids = mot_tracker.update(detections)
 
-            detections_with_category = np.array(detections_with_category)
-            track_bbs_ids = mot_tracker.update(detections_with_category)
+            if ENABLE_SORT_ALGORITHM or ENABLE_FUSION_MODEL:
+                detections_with_category_id = np.array(detections_with_category_id)
+                track_bbs_ids = mot_tracker.update(detections_with_category_id)
 
-            # re-create the track_bbs_ids with string type catefory
-            track_bbs_ids = list(track_bbs_ids)
-            track_bbs_ids_copy = track_bbs_ids.copy()
-            track_bbs_ids.clear()
-            for det in track_bbs_ids_copy:
-                x1, y1, x2, y2, id, cat = [int(p) for p in det]
-                track_bbs_ids.append([x1, y1, x2, y2, id, category_table[cat]])
+                # re-create the track_bbs_ids with string type catefory
+                track_bbs_ids = list(track_bbs_ids)
+                track_bbs_ids_copy = track_bbs_ids.copy()
+                track_bbs_ids.clear()
+                for det in track_bbs_ids_copy:
+                    x1, y1, x2, y2, id, cat = [int(p) for p in det]
+                    track_bbs_ids.append([x1, y1, x2, y2, id, category_table[cat]])
 
             if ENABLE_FUSION_MODEL:
                 fusion_result = fusion_model.fusion_model(track_bbs_ids)
@@ -177,14 +187,23 @@ if __name__ == "__main__":
             # [time_stamp, ]
 
             if SAVE_DATA:
-                for det in track_bbs_ids:
-                    x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
-                    if ENABLE_FUSION_MODEL:
-                        data_log = []
-                    else:
-                        data_log = [time_stamp, cat, id, (x1, y1, x2, y2), "Event"]
-                    #print("data_log : {}".format(data_log))
-                    yolo_data_file.write("{}\n".format(str(data_log)))
+                yolo_data_file.write("{} {}\n".format(str(time_stamp), str(len(results))))
+                if ENABLE_FUSION_MODEL:
+                    for det in fusion_result:
+                        x1, y1, x2, y2, username = [int(p) if isinstance(p, int) else p for p in det]
+                        data_log = [username, (x1, y1, x2, y2), "Event"]
+                        yolo_data_file.write("{}\n".format(str(data_log)))
+                elif ENABLE_SORT_ALGORITHM:
+                    for det in track_bbs_ids:
+                        x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
+                        data_log = [cat, id, (x1, y1, x2, y2), "Event"]
+                        yolo_data_file.write("{}\n".format(str(data_log)))
+                else:
+                    for det in detections_with_category:
+                        x1, y1, x2, y2, score, cat = [int(p) if isinstance(p, int) else p for p in det]
+                        data_log = [cat, (x1, y1, x2, y2), score]
+                        yolo_data_file.write("{}\n".format(str(data_log)))
+                
 
         #yolo_history = fusion_model.get_yolo_history()
         #print("yolo_history : {}".format(yolo_history))
@@ -193,11 +212,13 @@ if __name__ == "__main__":
         #beacon_history = fusion_model.get_beacon_history()
         #print("beacon_history : {}".format(beacon_history))
         #frame = draw_utils.draw_beacon_path(frame, beacon_history)
-
-        if ENABLE_FUSION_MODEL:
-            frame = draw_utils.draw_fusion_box(frame, fusion_result)
-        elif ENABLE_SORT_ALGORITHM:
-            frame = draw_utils.draw_box(frame, track_bbs_ids)
+        if ENABLE_DRAW_BOX:
+            if ENABLE_FUSION_MODEL:
+                frame = draw_utils.draw_fusion_box(frame, fusion_result)
+            elif ENABLE_SORT_ALGORITHM:
+                frame = draw_utils.draw_sort_box(frame, track_bbs_ids)
+            else:
+                frame = draw_utils.draw_box(frame, detections_with_category)
 
         if ENABLE_SENDER:
             room_id = YOLO_ID
