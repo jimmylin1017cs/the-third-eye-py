@@ -23,6 +23,8 @@ username_table = dict()
 beacon_history = dict()
 yolo_history = dict()
 
+process_start_time_stamp = time.time()
+
 # box = [x, y, w, h]
 # Data = [x, y]
 # Fusion_result = [num, name]
@@ -96,6 +98,22 @@ def fusion_model(track_bbs_ids):
     existe_beacon_id = list()
 
     beacon_dataset = get_beacon_data()
+
+    # save beacon_dataset
+    beacpm_save_file = "save/beacon_" + str(process_start_time_stamp) + ".log" 
+    with open(beacpm_save_file, 'a') as f:
+        time_stamp = time.time()
+        f.write("{} {}\n".format(str(time_stamp), str(len(beacon_dataset))))
+
+        for beacon_id in beacon_dataset.keys():
+
+            x_b = beacon_dataset[beacon_id][0]
+            y_b = beacon_dataset[beacon_id][1]
+
+            data_log = [beacon_id, (x_b, y_b)]
+            f.write("{}\n".format(str(data_log)))
+
+
     #print("beacon_dataset : {}".format(beacon_dataset))
 
     # store beacon data
