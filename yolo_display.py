@@ -65,7 +65,8 @@ if __name__ == "__main__":
                     #print(frame_time_stamp)
                     #print(track_bbs_ids)
 
-                    fusion_result = fusion_model.fusion_model(track_bbs_ids)
+                    beacon_dataset = fusion_model.get_beacon_data()
+                    fusion_result = fusion_model.fusion_model(track_bbs_ids, beacon_dataset)
                     frame = draw_utils.draw_fusion_box(frame_buffer[frame_time_stamp], fusion_result)
 
                     prev_time_stamp = time_stamp

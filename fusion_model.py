@@ -87,7 +87,7 @@ def get_beacon_data():
 
     return beacon_dataset
 
-def fusion_model(track_bbs_ids):
+def fusion_model(track_bbs_ids, beacon_dataset):
 
     # generate transform matrix image -> world
     #transform_matrix = generate_transform_matrix(beacon_on_image, beacon_on_world)
@@ -97,7 +97,7 @@ def fusion_model(track_bbs_ids):
     existe_yolo_id = list()
     existe_beacon_id = list()
 
-    beacon_dataset = get_beacon_data()
+    #beacon_dataset = get_beacon_data()
 
     # save beacon_dataset
     beacpm_save_file = "save/beacon_" + str(process_start_time_stamp) + ".log" 
@@ -140,7 +140,11 @@ def fusion_model(track_bbs_ids):
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
         #x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
-        x1, y1, x2, y2, id, cat = [p for p in det]
+        if len(det) == 5:
+            x1, y1, x2, y2, id = [p for p in det]
+        elif len(det) == 6:
+            x1, y1, x2, y2, id, cat = [p for p in det]
+
         x = (x1 + x2) / 2
         y = (y1 + y2) / 2
         pts = [x, y]
@@ -263,7 +267,10 @@ def fusion_model(track_bbs_ids):
     fusion_result = []
     for det in track_bbs_ids:
 
-        x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
+        if len(det) == 5:
+            x1, y1, x2, y2, id = [int(p) if isinstance(p, int) else p for p in det]
+        elif len(det) == 6:
+            x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
 
         if id in fusion_map:
             username = fusion_map[id]

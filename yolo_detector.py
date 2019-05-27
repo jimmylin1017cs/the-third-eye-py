@@ -184,7 +184,8 @@ if __name__ == "__main__":
                     track_bbs_ids.append([x1, y1, x2, y2, id, category_table[cat]])
 
             if ENABLE_FUSION_MODEL:
-                fusion_result = fusion_model.fusion_model(track_bbs_ids)
+                beacon_dataset = fusion_model.get_beacon_data()
+                fusion_result = fusion_model.fusion_model(track_bbs_ids, beacon_dataset)
 
             #print("track_bbs_ids : {}".format(track_bbs_ids))
             #print("detections_with_category : {}".format(detections_with_category))

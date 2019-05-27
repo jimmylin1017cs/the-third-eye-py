@@ -10,8 +10,9 @@ from ast import literal_eval
 
 #ServerURL = 'http://IP:9999' #with no secure connection
 #ServerURL = 'https://DomainName' #with SSL connection
-ServerURL = 'http://140.113.86.143:9999'
-Reg_addr = None #if None, Reg_addr = MAC address
+ServerURL = 'http://192.168.1.134:9999'
+#Reg_addr = None #if None, Reg_addr = MAC address
+Reg_addr = "B06EBF60297E"
 
 #DAN.profile['dm_name']='HumanBox'
 #DAN.profile['df_list']=['BoxCoord-I', 'BoxID-I', 'FrameID-I']

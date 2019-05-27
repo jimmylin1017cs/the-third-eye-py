@@ -39,22 +39,18 @@ def draw_fusion_box(frame, fusion_result):
 
     return frame
 
-'''def draw_fusion_box(frame, track_bbs_ids, fusion_result):
+def draw_fusion_box_select_username(frame, fusion_result, enable_username):
 
-    for det in track_bbs_ids:
+    for det in fusion_result:
         #det = track_bbs_ids[i]
         #print("det: {}".format(det))
-        x1, y1, x2, y2, id, cat = [int(p) if isinstance(p, int) else p for p in det]
-        cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
-
-        if id in fusion_result:
-            username = fusion_result[id]
+        # fusion model only username, not have category
+        x1, y1, x2, y2, username = [int(p) if isinstance(p, int) else p for p in det]
+        if username in enable_username:
+            cv2.rectangle(frame, (x1 , y1), (x2, y2),(0, 255, 0), 5)
             cv2.putText(frame, username, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
-        else:
-            cv2.putText(frame, "unknown", (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 5)
-        #cv2.putText(frame, str(cat.decode("utf-8")), (int(x-w/2), int(y-h/2)), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0))
 
-    return frame'''
+    return frame
 
 def draw_yolo_path(frame, yolo_history):
 
