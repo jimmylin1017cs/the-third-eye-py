@@ -1,7 +1,7 @@
 from flask import Flask, render_template, Response
 
 import cv2
-import yolo_server
+import frame_receiver
 import time
 
 app = Flask(__name__)
@@ -13,8 +13,8 @@ def index():
 def gen(client_id):
 
     while True:
-        frame = yolo_server.get_frame(client_id)
-        client_amount = yolo_server.yolo_client_amount()
+        frame = frame_receiver.get_frame(client_id)
+        client_amount = frame_receiver.frame_sender_amount()
         if(client_amount > 0 and frame is not None):
             try:
                 jpg_string = cv2.imencode('.jpg', frame)[1].tostring()
@@ -33,6 +33,6 @@ def video_feed2():
 
 if __name__ == "__main__":
     
-    yolo_server.init_yolo_server()
+    frame_receiver.init_frame_receiver("0.0.0.0", 8092)
     time.sleep(1)
     app.run(host='0.0.0.0', port=8090, threaded=True, debug=True, use_reloader=False)
