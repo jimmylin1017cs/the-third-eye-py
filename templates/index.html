@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- Required meta tags to auto reload web page -->
+    <!-- <meta http-equiv="refresh" content="5"> -->
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+    <title>The Third Eyes Selector</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <form method="post">
+        <!-- Default indeterminate -->
+        {% if g.name_list %}
+          {% for username in g.name_list %}
+              {% if username in g.enable_list %}
+              <div class="custom-control custom-checkbox">
+                  <input type="checkbox" name="person" class="custom-control-input" id={{ username }} value={{ username }} checked>
+                  <label class="custom-control-label" for={{ username }}>{{ username }}</label>
+              </div>
+              {% else %}
+              <div class="custom-control custom-checkbox">
+                  <input type="checkbox" name="person" class="custom-control-input" id={{ username }} value={{ username }}>
+                  <label class="custom-control-label" for={{ username }}>{{ username }}</label>
+              </div>
+              {% endif %}
+          {% endfor %}
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/jquery-3.4.1.slim.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  </body>
+</html>
