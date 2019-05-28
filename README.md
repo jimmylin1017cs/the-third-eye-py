@@ -29,16 +29,40 @@ cffi
 sudo pip3 install fastdtw
 ```
 
+## Config
+
+- Yolo Server Port `8091`
+- Display Server Port `8092`
+- Stream Server Port `8090`
+
 ## Run
 
-- Server
+- Stream Server
 
 ```
 python3 mjpeg_streamer.py
 ```
 
-- Client
+- Yolo Client
 
 ```
 python3 yolo_detector.py
+```
+
+- Display Server
+
+```
+python3 yolo_display.py
+```
+
+- Location
+
+```
+python3 DAI_push_location.py
+```
+
+- Command (Selector)
+
+```
+python3 checkbox_web.py
 ```

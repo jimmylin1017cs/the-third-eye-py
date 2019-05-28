@@ -1,2 +1,2 @@
 1=apple
-2=ornage
+2=orange

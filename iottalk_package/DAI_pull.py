@@ -29,7 +29,13 @@ def receive_data_from_iottalk():
 
     #print('start receive frame from iottalk')
     track_bbs_ids = []
-    time_stamp = None
+    box_time_stamp = None
+
+    beacon_dataset = {}
+    beacon_time_stamp = None
+
+    enable_ids = []
+    cmd_room_id = None
 
     try:
 
@@ -43,7 +49,7 @@ def receive_data_from_iottalk():
             #rint(box)
 
             box_list = ast.literal_eval(box[0])
-            time_stamp = box_list[0]
+            box_time_stamp = box_list[0]
 
             #print('frame: {}'.format(frame_id))
 
@@ -54,7 +60,46 @@ def receive_data_from_iottalk():
                 
                 track_bbs_ids.append([x1, y1, x2, y2, id])
 
-        return (time_stamp, track_bbs_ids)
+        # pull beacon information
+        beacon = DAN.pull('Loc-O')
+
+        # beacon information
+        if beacon != None:
+
+            print("pull beacon information")
+            #rint(box)
+
+            beacon_list = ast.literal_eval(beacon[0])
+            beacon_time_stamp = beacon_list[0]
+
+            #print('frame: {}'.format(frame_id))
+
+            for i in range(1, len(beacon_list)):
+
+                location = beacon_list[i]
+                id, x, y = [int(p) for p in location]
+                
+                beacon_dataset[str(id)] = [x, y]
+
+        # pull cmd information
+        cmd = DAN.pull('Cmd-O')
+
+        # cmd information
+        if cmd != None:
+
+            print("pull cmd information")
+            #rint(box)
+
+            cmd_list = ast.literal_eval(cmd[0])
+            cmd_room_id = cmd_list[0]
+
+            #print('frame: {}'.format(frame_id))
+
+            for user_id in cmd_list[1]:
+
+                enable_ids.append(user_id)
+
+        return (box_time_stamp, track_bbs_ids, beacon_time_stamp, beacon_dataset, cmd_room_id, enable_ids)
 
     except Exception as e:
         print(e)

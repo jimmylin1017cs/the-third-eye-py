@@ -140,10 +140,8 @@ class YoloHandler(threading.Thread):
         print("Client {} disconnected".format(str(self.socket)))
 
 
-def init_yolo_server():
+def init_yolo_server(host, port):
     
-    host = "0.0.0.0"
-    port = 8091
     print("YoloServer.is_initial : {}".format(YoloServer.is_initial))
 
     if(not YoloServer.is_initial):

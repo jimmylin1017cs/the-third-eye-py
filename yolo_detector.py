@@ -13,7 +13,7 @@ import fusion_model
 import draw_package.draw_utils as draw_utils
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('detector_config.ini')
 
 ENABLE_SENDER = config.getboolean('Yolo_Client', 'Enable_Sender') # send frame to server
 
