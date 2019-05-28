@@ -44,7 +44,7 @@ if __name__ == "__main__":
     time_stamp = time.time()
 
     dest_ip = "127.0.0.1"
-    dest_port = 8091
+    dest_port = 8092
 
     sender = FrameSender(dest_ip, dest_port)
     sender.start()
