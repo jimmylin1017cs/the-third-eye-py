@@ -35,9 +35,10 @@ def get_beacon_data():
                 
                 l = f.readline().strip()
                 l = l.split(",")
-                pt = [int(a) for a in l]
+                room_id = int(l[0])
+                pt = [int(l[1]), int(l[2])]
                 #print(pt)
-                beacon_dataset[id] = pt
+                beacon_dataset[id] = [room_id, pt]
 
     return beacon_dataset
 
@@ -46,8 +47,9 @@ def send_location_to_iottalk(beacon_dataset):
     try:
         location = [time.time()]
         for user_id in beacon_dataset.keys():
-            position = beacon_dataset[user_id]
-            location.append([int(user_id), position[0], position[1]])
+            room_id = beacon_dataset[user_id][0]
+            position = beacon_dataset[user_id][1]
+            location.append([int(room_id), int(user_id), position[0], position[1]])
 
         print(location)
 
