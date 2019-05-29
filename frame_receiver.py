@@ -6,6 +6,8 @@ import time
 import threading
 import struct
 
+frame_receiver_lock = threading.Lock()
+
 class FrameReceiver(threading.Thread):
 
     is_initial = False
@@ -13,7 +15,7 @@ class FrameReceiver(threading.Thread):
 
     def __init__(self, host, port):
         threading.Thread.__init__(self)
-        self.lock = threading.Lock()
+        self.lock = frame_receiver_lock
 
         self.host = host
         self.port = port
@@ -122,8 +124,8 @@ class FrameHandler(threading.Thread):
                 time_stamp_list = list(FrameHandler.frame_buffer[client_id].keys())
                 time_stamp_list.sort()
 
-                for i in range(20):
-                    del FrameHandler.frame_buffer[client_id][time_stamp_list[i]]
+                del FrameHandler.frame_buffer[client_id][time_stamp_list[0]]
+                #print("Delete Frame {}".format(time_stamp_list[0]))
             
             self.lock.release()
 
@@ -153,23 +155,35 @@ def frame_sender_amount():
 
 def get_frame_buffer():
 
-    return FrameHandler.frame_buffer
+    frame_buffer = None
+
+    frame_receiver_lock.acquire()
+
+    if FrameHandler.frame_buffer is not None:
+        frame_buffer = FrameHandler.frame_buffer
+
+    frame_receiver_lock.release()
+
+    return frame_buffer
 
 def get_frame(client_id):
 
-    if FrameHandler.frame_buffer is None:
-        return None
+    frame = None
+
+    frame_receiver_lock.acquire()
+
+    if FrameHandler.frame_buffer is not None:
     
-    if client_id in FrameHandler.frame_buffer:
+        if client_id in FrameHandler.frame_buffer:
 
-        frame_buffer = FrameHandler.frame_buffer[client_id]
-        time_stamp = list(frame_buffer.keys())
-        time_stamp.sort()
-        frame = frame_buffer[time_stamp[-1]]
-        return frame
+            frame_buffer = FrameHandler.frame_buffer[client_id]
+            time_stamp = list(frame_buffer.keys())
+            time_stamp.sort()
+            frame = frame_buffer[time_stamp[-1]]
 
-    else:
-        return None
+    frame_receiver_lock.release()
+
+    return frame
 
 def get_frame_time_stamp():
 

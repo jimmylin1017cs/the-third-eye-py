@@ -26,13 +26,13 @@ class FrameSender():
 
         packet = struct.pack('I', client_id) + struct.pack('d', time_stamp) + struct.pack('I', len(jpg_string)) + jpg_string
 
-        print("packet length : {}".format(len(packet)))
+        #print("packet length : {}".format(len(packet)))
 
         #jpg_string = jpg_string.encode()
 
         send_byte = self.s.sendall(packet)
 
-        print("send_byte: {}".format(send_byte))
+        #print("send_byte: {}".format(send_byte))
 
 
 if __name__ == "__main__":

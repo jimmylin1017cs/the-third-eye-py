@@ -33,11 +33,12 @@ print("BEACON_ON_WORLD = {}".format(BEACON_ON_WORLD))
 
 class FusionModel():
 
+    username_file = USERNAME_FILE
+    username_table = None
+
     def __init__(self, room_id):
 
         self.room_id = room_id
-        self.username_file = USERNAME_FILE
-        self.username_table = dict()
         self.beacon_history = dict()
         self.yolo_history = dict()
         self.beacon_on_image = np.array(BEACON_ON_IMAGE, dtype = "float32")
@@ -45,7 +46,27 @@ class FusionModel():
         self.funsion_windows = FUSION_WINDOWS
 
         self.transform_matrix = self.generate_transform_matrix(self.beacon_on_world, self.beacon_on_image)
-        self.generate_username()
+
+    def get_username_table():
+        if FusionModel.username_table is None:
+            FusionModel.username_table = dict()
+            FusionModel.generate_username()
+        return FusionModel.username_table
+
+    def generate_username():
+
+        if os.path.exists(FusionModel.username_file):
+
+            with open(FusionModel.username_file, 'r') as f:
+
+                for line in f.readlines():
+
+                    l = line.strip().split("=")
+                    id = int(l[0])
+                    username = l[1]
+                    FusionModel.username_table[id] = username
+
+        #print("FusionModel.username_table : {}".format(FusionModel.username_table))
 
     def get_room_id(self):
         return self.room_id
@@ -58,24 +79,6 @@ class FusionModel():
 
     def get_transform_matrix(self):
         return self.transform_matrix
-    
-    def get_username_table(self):
-        return self.username_table
-
-    def generate_username(self):
-
-        if os.path.exists(self.username_file):
-
-            with open(self.username_file, 'r') as f:
-
-                for line in f.readlines():
-
-                    l = line.strip().split("=")
-                    id = l[0]
-                    username = l[1]
-                    self.username_table[id] = username
-
-        print(self.username_table)
 
     def generate_transform_matrix(self, src_pts, dest_pts):
 
@@ -214,9 +217,13 @@ class FusionModel():
 
         for i in range(len(sorted_dtw_variance)):
 
+            # sorted_dtw_variance = variance : beacon id
             # get beacon id and its row
             current_id = sorted_dtw_variance[i][1]
             sorted_dtw_table = dtw_table[current_id]
+            # check if sorted_dtw_table is empty
+            if not sorted_dtw_table:
+                break
             # sort by distance small -> large and choose smallest distance yolo id (fusion id)
             sorted_dtw_table = sorted([(value, key) for (key, value) in sorted_dtw_table.items()], reverse=False)
             fusion_id = sorted_dtw_table[0][1]

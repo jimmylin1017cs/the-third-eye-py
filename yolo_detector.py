@@ -8,6 +8,7 @@ import configparser
 
 import sort_with_category
 
+import yolo_client
 import frame_sender
 import fusion_model
 import draw_package.draw_utils as draw_utils
@@ -15,11 +16,20 @@ import draw_package.draw_utils as draw_utils
 config = configparser.ConfigParser()
 config.read('detector_config.ini')
 
-ENABLE_SENDER = config.getboolean('Yolo_Client', 'Enable_Sender') # send frame to server
+ENABLE_CLIENT = config.getboolean('Yolo_Client', 'Enable_Client') # send data to yolo server
+
+if ENABLE_CLIENT:
+    DESTINATION_IP = config.get('Yolo_Client', 'Destination_IP')
+    DESTINATION_PORT = config.get('Yolo_Client', 'Destination_Port')
+    DESTINATION_PORT = int(DESTINATION_PORT)
+
+print("ENABLE_CLIENT = {}".format(ENABLE_CLIENT))
+
+ENABLE_SENDER = config.getboolean('Frame_Sender', 'Enable_Sender') # send frame to display server
 
 if ENABLE_SENDER:
-    RECEIVER_IP = config.get('Yolo_Client', 'Receiver_IP')
-    RECEIVER_PORT = config.get('Yolo_Client', 'Receiver_Port')
+    RECEIVER_IP = config.get('Frame_Sender', 'Receiver_IP')
+    RECEIVER_PORT = config.get('Frame_Sender', 'Receiver_Port')
     RECEIVER_PORT = int(RECEIVER_PORT)
 
 print("ENABLE_SENDER = {}".format(ENABLE_SENDER))
@@ -110,11 +120,18 @@ if __name__ == "__main__":
         if ENABLE_SORT_ALGORITHM:
             sort_data_file = open("save/yolo_" + str(YOLO_ID) + "_sort_" + str(process_start_time_stamp) + ".log", 'w')
 
+    # initial client
+    if ENABLE_CLIENT:
+        dest_ip = DESTINATION_IP
+        dest_port = DESTINATION_PORT
+        client = yolo_client.YoloClient(dest_ip, dest_port)
+        client.start()
+
     # initial sender
     if ENABLE_SENDER:
-        dest_ip = RECEIVER_IP
-        dest_port = RECEIVER_PORT
-        sender = frame_sender.FrameSender(dest_ip, dest_port)
+        receiver_ip = RECEIVER_IP
+        receiver_port = RECEIVER_PORT
+        sender = frame_sender.FrameSender(receiver_ip, receiver_port)
         sender.start()
 
     # initial iottalk connection
@@ -233,12 +250,16 @@ if __name__ == "__main__":
             else:
                 frame = draw_utils.draw_box(frame, detections_with_category)
 
+        if ENABLE_CLIENT:
+            client_id = YOLO_ID
+            client.send_data(client_id, time_stamp, track_bbs_ids)
+
         if ENABLE_SENDER:
             room_id = YOLO_ID
             sender.send_frame(room_id, time_stamp, frame)
 
         if ENABLE_IOTTALK:
-            DAI_push.send_data_to_iottalk(time_stamp, track_bbs_ids)
+            DAI_push.send_data_to_iottalk(YOLO_ID, time_stamp, track_bbs_ids)
 
         if SHOW_PREVIEW:
             cv2.namedWindow("preview",0)

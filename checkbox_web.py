@@ -32,7 +32,7 @@ def generate_username():
             for line in f.readlines():
 
                 l = line.strip().split("=")
-                id = l[0]
+                id = int(l[0])
                 username = l[1]
                 username_table[username] = id
 
@@ -81,7 +81,11 @@ class CheckBoxServer(threading.Thread):
         print(enable_list)
         g.enable_list = enable_list
 
-        DAN.push('Cmd-I', str([room_id, enable_list]))
+        enable_ids = []
+        for username in enable_list:
+            enable_ids.append(CheckBoxServer.username_table[username])
+
+        DAN.push('Cmd-I', str([room_id, enable_ids]))
 
         return render_template("index.html")
 
