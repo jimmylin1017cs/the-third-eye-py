@@ -5,6 +5,9 @@ import numpy as np
 import time
 import threading
 import struct
+import ast
+
+yolo_server_lock = threading.Lock()
 
 class YoloServer(threading.Thread):
 
@@ -13,7 +16,7 @@ class YoloServer(threading.Thread):
 
     def __init__(self, host, port):
         threading.Thread.__init__(self)
-        self.lock = threading.Lock()
+        self.lock = yolo_server_lock
 
         self.host = host
         self.port = port
@@ -34,7 +37,8 @@ class YoloServer(threading.Thread):
 
 class YoloHandler(threading.Thread):
 
-    frame_buffer = None
+    data_buffer = None
+    update = False
 
     def __init__(self, socket, addr, lock):
         threading.Thread.__init__(self)
@@ -102,32 +106,41 @@ class YoloHandler(threading.Thread):
                     return None
                 data += packet
 
-            # convert byte string to numpy
-            jpg_string = np.fromstring(data, np.uint8)
-            # convert jpg to numpy image
-            frame = cv2.imdecode(jpg_string, cv2.IMREAD_COLOR)
+            # convert byte string to string
+            data = data.decode('utf-8')
+            # convert string to list
+            data = ast.literal_eval(data)
 
             self.lock.acquire()
 
-            if YoloHandler.frame_buffer is None:
-                YoloHandler.frame_buffer = dict()
+            if YoloHandler.data_buffer is None:
+                YoloHandler.data_buffer = dict()
 
-            if client_id not in YoloHandler.frame_buffer:
-                YoloHandler.frame_buffer[client_id] = dict()
+            #if client_id not in YoloHandler.data_buffer:
+                #YoloHandler.data_buffer[client_id] = []
 
-            YoloHandler.frame_buffer[client_id][str(time_stamp)] = frame
+            box_data = []
+            box_data.append(time_stamp)
 
-            if len(YoloHandler.frame_buffer[client_id]) > 20:
+            for det in data:
+                id, x1, y1, x2, y2 = [int(p) if isinstance(p, int) else p for p in det]
+                box_data.append([id, x1, y1, x2, y2])
+
+            YoloHandler.data_buffer[client_id] = box_data
+
+            '''if len(YoloHandler.data_buffer[client_id]) > 20:
                 
-                time_stamp_list = list(YoloHandler.frame_buffer[client_id].keys())
+                time_stamp_list = list(YoloHandler.data_buffer[client_id].keys())
                 time_stamp_list.sort()
 
-                for i in range(20):
-                    del YoloHandler.frame_buffer[client_id][time_stamp_list[i]]
-            
+                del YoloHandler.data_buffer[client_id][time_stamp_list[0]]
+                print("Delete Frame {}".format(time_stamp_list[0]))'''
+
+            YoloHandler.update = True
+
             self.lock.release()
 
-            #cv2.imshow(str(self.socket), YoloHandler.frame_buffer)
+            #cv2.imshow(str(self.socket), YoloHandler.data_buffer)
             #k = cv2.waitKey(1)
             #if k == 0xFF & ord("q"):
                 #break
@@ -135,7 +148,7 @@ class YoloHandler(threading.Thread):
         self.socket.close()
         YoloServer.client_amount -= 1
 
-        del YoloHandler.frame_buffer[self.client_id]
+        del YoloHandler.data_buffer[self.client_id]
 
         print("Client {} disconnected".format(str(self.socket)))
 
@@ -151,21 +164,30 @@ def yolo_client_amount():
 
     return YoloServer.client_amount
 
-def get_frame_buffer():
+def get_data_buffer():
 
-    return YoloHandler.frame_buffer
+    data_buffer = None
 
-def get_frame(client_id):
+    yolo_server_lock.acquire()
 
-    if YoloHandler.frame_buffer is None:
+    if YoloHandler.data_buffer is not None:
+        data_buffer = YoloHandler.data_buffer.copy()
+
+    yolo_server_lock.release()
+
+    return data_buffer
+
+def get_data(client_id):
+
+    if YoloHandler.data_buffer is None:
         return None
     
-    if client_id in YoloHandler.frame_buffer:
+    if client_id in YoloHandler.data_buffer:
 
-        frame_buffer = YoloHandler.frame_buffer[client_id]
-        time_stamp = list(frame_buffer.keys())
+        data_buffer = YoloHandler.data_buffer[client_id]
+        time_stamp = list(data_buffer.keys())
         time_stamp.sort()
-        frame = frame_buffer[time_stamp[-1]]
+        frame = data_buffer[time_stamp[-1]]
         return frame
 
     else:
@@ -178,7 +200,7 @@ def get_frame_time_stamp():
 if __name__ == "__main__":
 
     host = "0.0.0.0"
-    port = 8091
+    port = 8093
 
     YoloServer(host, port).start()
 
@@ -186,31 +208,33 @@ if __name__ == "__main__":
 
     while True:
 
-        frame_buffer = get_frame_buffer()
+        data_buffer = get_data_buffer()
         #time_stamp = get_frame_time_stamp()
 
-        #print(frame_buffer)
+        #print(data_buffer)
 
-        if frame_buffer is not None:
+        if data_buffer is not None:
 
-            frame_buffer = frame_buffer.copy()
+            data_buffer = data_buffer.copy()
 
-            for client_id in frame_buffer.keys():
+            print(data_buffer)
+
+            '''for client_id in data_buffer.keys():
 
                 #print("client_id : {}".format(client_id))
 
                 if client_id not in cv2_windows_conrtol:
                     cv2_windows_conrtol.append(client_id)
                 
-                if frame_buffer[client_id]:
-                    time_stamp = list(frame_buffer[client_id].keys())
+                if data_buffer[client_id]:
+                    time_stamp = list(data_buffer[client_id].keys())
                     time_stamp.sort()
                     #print(time_stamp[-1])
-                    frame = frame_buffer[client_id][time_stamp[-1]]
+                    frame = data_buffer[client_id][time_stamp[-1]]
 
                     if frame is not None:
                         window_name = "preview_" + str(client_id)
-                        cv2.namedWindow(window_name,0)
+                        cv2.namedWindow(window_name, 0)
                         cv2.resizeWindow(window_name, 640, 480)
                         cv2.imshow(window_name, frame)
 
@@ -220,7 +244,7 @@ if __name__ == "__main__":
 
             client_ids = cv2_windows_conrtol.copy()
             for client_id in client_ids:
-                if client_id not in frame_buffer:
+                if client_id not in data_buffer:
                     window_name = "preview_" + str(client_id)
                     cv2.destroyWindow(window_name)
-                    cv2_windows_conrtol.remove(client_id)
+                    cv2_windows_conrtol.remove(client_id)'''
