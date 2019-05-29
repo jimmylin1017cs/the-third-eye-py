@@ -29,6 +29,7 @@ def receive_data_from_iottalk():
 
     #print('start receive frame from iottalk')
     track_bbs_ids = []
+    yolo_id = None
     box_time_stamp = None
 
     beacon_dataset = {}
@@ -45,15 +46,16 @@ def receive_data_from_iottalk():
         # boxes information
         if box != None:
 
-            print("pull boxes information")
+            #print("pull boxes information")
             #rint(box)
 
             box_list = ast.literal_eval(box[0])
-            box_time_stamp = box_list[0]
+            yolo_id = box_list[0]
+            box_time_stamp = box_list[1]
 
             #print('frame: {}'.format(frame_id))
 
-            for i in range(1, len(box_list)):
+            for i in range(2, len(box_list)):
 
                 det = box_list[i]
                 id, x1, y1, x2, y2 = [int(p) for p in det]
@@ -66,7 +68,7 @@ def receive_data_from_iottalk():
         # beacon information
         if beacon != None:
 
-            print("pull beacon information")
+            #print("pull beacon information")
             #rint(box)
 
             beacon_list = ast.literal_eval(beacon[0])
@@ -77,9 +79,13 @@ def receive_data_from_iottalk():
             for i in range(1, len(beacon_list)):
 
                 location = beacon_list[i]
-                id, x, y = [int(p) for p in location]
+                room_id, user_id, x, y = [int(p) for p in location]
+                room_id = room_id
+                user_id = user_id
                 
-                beacon_dataset[str(id)] = [x, y]
+                if room_id not in beacon_dataset:
+                    beacon_dataset[room_id] = {}
+                beacon_dataset[room_id][user_id] = [x, y]
 
         # pull cmd information
         cmd = DAN.pull('Cmd-O')
@@ -87,7 +93,7 @@ def receive_data_from_iottalk():
         # cmd information
         if cmd != None:
 
-            print("pull cmd information")
+            #print("pull cmd information")
             #rint(box)
 
             cmd_list = ast.literal_eval(cmd[0])
@@ -99,7 +105,7 @@ def receive_data_from_iottalk():
 
                 enable_ids.append(user_id)
 
-        return (box_time_stamp, track_bbs_ids, beacon_time_stamp, beacon_dataset, cmd_room_id, enable_ids)
+        return (yolo_id, box_time_stamp, track_bbs_ids, beacon_time_stamp, beacon_dataset, cmd_room_id, enable_ids)
 
     except Exception as e:
         print(e)

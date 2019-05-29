@@ -25,11 +25,12 @@ DAN.device_registration_with_retry(ServerURL, Reg_addr)
 
 #cap = cv2.VideoCapture('time_counter.flv')
 
-def send_data_to_iottalk(time_stamp, track_bbs_ids):
+def send_data_to_iottalk(yolo_id, time_stamp, track_bbs_ids):
 
     try:
 
         obj_box = []
+        obj_box.append(yolo_id)
         obj_box.append(time_stamp)
 
         for det in track_bbs_ids:
