@@ -9,7 +9,7 @@ def init_iottalk(IoTTalk_IP, IoTTalk_Port, Register_Address):
     ServerURL = 'http://' + IoTTalk_IP + ':' + str(IoTTalk_Port)
     Reg_addr = Register_Address
 
-    DAN.profile['dm_name']='ObjID'
+    DAN.profile['dm_name']='ObjBox'
     DAN.profile['df_list']=['Box-I']
     DAN.profile['d_name']= None # None for autoNaming
     DAN.device_registration_with_retry(ServerURL, Reg_addr)
