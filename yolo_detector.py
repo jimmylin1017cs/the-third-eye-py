@@ -82,12 +82,12 @@ if __name__ == "__main__":
     # Optional statement to configure preferred GPU. Available only in GPU version.
     # pydarknet.set_cuda_device(0)
 
-    #cfg_file = "hscc.cfg/yolov3.cfg"
-    #weights_file = "hscc.cfg/weights/yolov3_10000.weights"
+    cfg_file = "hscc.cfg/yolov3.cfg"
+    weights_file = "hscc.cfg/weights/yolov3_10000.weights"
     #cfg_file = "hscc.cfg/yolov3-tiny.cfg"
     #weights_file = "hscc.cfg/weights/yolov3-tiny_100000.weights"
-    cfg_file = "hscc.cfg/yolov2.cfg"
-    weights_file = "hscc.cfg/weights/yolov2_10000.weights"
+    #cfg_file = "hscc.cfg/yolov2.cfg"
+    #weights_file = "hscc.cfg/weights/yolov2_10000.weights"
 
     data_file = "hscc.cfg/hscc.data"
 
@@ -96,6 +96,9 @@ if __name__ == "__main__":
 
     # initial camera
     cap = cv2.VideoCapture("test.mp4")
+    #cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(1920))
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
 
     # initial sort class
     mot_tracker = sort_with_category.Sort() 
@@ -144,9 +147,15 @@ if __name__ == "__main__":
 
     prev_time_stamp = 0
     time_stamp = time.time()
+    scale_percent = 0.5
 
     while True:
         r, frame = cap.read()
+        #resized_frame = cv2.resize(frame, (640, 480))
+        resized_frame = cv2.resize(frame, (0, 0), fx=scale_percent, fy=scale_percent, interpolation=cv2.INTER_AREA)
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        print("frame_width : {}\nframe_height : {}".format(frame_width, frame_height))
 
         prev_time_stamp = time_stamp
         time_stamp = time.time()
@@ -159,16 +168,15 @@ if __name__ == "__main__":
             out.write(frame)
         
         if r:
+            # Only measure the time taken by YOLO and API Call overhead
             start_time = time.time()
 
-            # Only measure the time taken by YOLO and API Call overhead
-
-            dark_frame = Image(frame)
+            dark_frame = Image(resized_frame)
             results = net.detect(dark_frame)
             del dark_frame
 
             end_time = time.time()
-            #print("Elapsed Time:",end_time-start_time)
+            print("Yolo Time : {}".format((end_time - start_time)))
 
             #print("results : {}".format(results))
             detections_with_category = list()
@@ -176,6 +184,10 @@ if __name__ == "__main__":
             for cat, score, bounds in results:
                 cat = cat.decode("utf-8")
                 x, y, w, h = bounds
+                x = x / scale_percent
+                y = y / scale_percent
+                w = w / scale_percent
+                h = h / scale_percent
                 #detections.append([int(x-w/2), int(y-h/2), int(x+w/2), int(y+h/2), score])
                 #detections.append([x-w/2, y-h/2, x+w/2, y+h/2, score])
 
@@ -190,7 +202,11 @@ if __name__ == "__main__":
 
             if ENABLE_SORT_ALGORITHM or ENABLE_FUSION_MODEL:
                 detections_with_category_id = np.array(detections_with_category_id)
+
+                #start_time = time.time()
                 track_bbs_ids = mot_tracker.update(detections_with_category_id)
+                #end_time = time.time()
+                #print("Sort Time : {}".format((end_time - start_time)))
 
                 # re-create the track_bbs_ids with string type catefory
                 track_bbs_ids = list(track_bbs_ids)
@@ -256,7 +272,10 @@ if __name__ == "__main__":
 
         if ENABLE_SENDER:
             room_id = YOLO_ID
+            #start_time = time.time()
             sender.send_frame(room_id, time_stamp, frame)
+            #end_time = time.time()
+            #print("Sender Time : {}".format((end_time - start_time)))
 
         if ENABLE_IOTTALK:
             DAI_push.send_data_to_iottalk(YOLO_ID, time_stamp, track_bbs_ids)

@@ -200,11 +200,12 @@ class FusionModel():
         dtw_variance = dict()
 
         for beacon_id in self.beacon_history.keys():
-            a = np.array(list(dtw_table[beacon_id].values()))
-            #print("a : {}".format(a))
-            variance = np.var(a)
-            dtw_variance[beacon_id] = variance
-            #print(dtw_table[beacon_id].values())
+            if beacon_id in dtw_table:
+                a = np.array(list(dtw_table[beacon_id].values()))
+                #print("a : {}".format(a))
+                variance = np.var(a)
+                dtw_variance[beacon_id] = variance
+                #print(dtw_table[beacon_id].values())
 
         #print(dtw_variance)
 

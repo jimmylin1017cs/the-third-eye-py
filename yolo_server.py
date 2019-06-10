@@ -206,6 +206,8 @@ if __name__ == "__main__":
 
     cv2_windows_conrtol = []
 
+    import iottalk_package.DAI_push as DAI_push
+
     while True:
 
         data_buffer = get_data_buffer()
@@ -218,6 +220,20 @@ if __name__ == "__main__":
             data_buffer = data_buffer.copy()
 
             print(data_buffer)
+
+            data_list = []
+            for yolo_id in data_buffer.keys():
+                data_list.append([yolo_id, data_buffer[yolo_id]])
+                #time_stamp = data_buffer[yolo_id][0]
+                #print("time_stamp : {}".format(time_stamp))
+                #for i in range(1, len(data_buffer[yolo_id])):
+                #    track_bbs_ids.append(data_buffer[yolo_id][i])
+                #print("track_bbs_ids : {}".format(track_bbs_ids))
+                #DAI_push.send_data_to_iottalk(yolo_id, time_stamp, track_bbs_ids)
+
+            print("data_list : {}".format(data_list))
+
+            DAI_push.send_all_data_to_iottalk(data_list)
 
             '''for client_id in data_buffer.keys():
 

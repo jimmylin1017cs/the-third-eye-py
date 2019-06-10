@@ -25,6 +25,22 @@ DAN.device_registration_with_retry(ServerURL, Reg_addr)
 
 #cap = cv2.VideoCapture('time_counter.flv')
 
+def send_all_data_to_iottalk(data_list):
+
+    try:
+        DAN.push('Box-I', str(data_list))
+        print('push')
+
+    except Exception as e:
+        print(e)
+        if str(e).find('mac_addr not found:') != -1:
+            print('Reg_addr is not found. Try to re-register...')
+            DAN.device_registration_with_retry(ServerURL, Reg_addr)
+        else:
+            print('Connection failed due to unknow reasons.')
+            #time.sleep(1)
+    #time.sleep(0.02)
+
 def send_data_to_iottalk(yolo_id, time_stamp, track_bbs_ids):
 
     try:

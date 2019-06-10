@@ -166,6 +166,25 @@ def get_frame_buffer():
 
     return frame_buffer
 
+def get_target_frame(client_id, time_stamp):
+
+    frame = None
+
+    frame_receiver_lock.acquire()
+
+    if FrameHandler.frame_buffer is not None:
+    
+        if client_id in FrameHandler.frame_buffer:
+
+            frame_buffer = FrameHandler.frame_buffer[client_id]
+
+            if time_stamp in frame_buffer:
+                frame = frame_buffer[time_stamp]
+
+    frame_receiver_lock.release()
+
+    return frame
+
 def get_frame(client_id):
 
     frame = None

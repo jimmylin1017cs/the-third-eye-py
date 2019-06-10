@@ -25,6 +25,112 @@ DAN.device_registration_with_retry(ServerURL, Reg_addr)
 
 #cap = cv2.VideoCapture('time_counter.flv')
 
+def receive_all_data_from_iottalk():
+
+    #print('start receive frame from iottalk')
+    yolo_dataset = {}
+    yolo_time_stamp = {}
+
+    beacon_dataset = {}
+    beacon_time_stamp = None
+
+    enable_ids = []
+    cmd_room_id = None
+
+    try:
+
+        # pull boxes information
+        box = DAN.pull('Box-O')
+
+        # boxes information
+        if box != None:
+
+            #print("pull boxes information")
+            #rint(box)
+
+            box_list = ast.literal_eval(box[0])
+            #print("box_list : {}".format(box_list))
+
+
+            for i in range(len(box_list)):
+                yolo_id = box_list[i][0]
+                #print("yolo_id : {}".format(yolo_id))
+                if yolo_id not in yolo_dataset:
+                    yolo_dataset[yolo_id] = []
+
+                box_data = box_list[i][1]
+
+                time_stamp = box_data[0]
+                yolo_time_stamp[yolo_id] = time_stamp
+                #print("time_stamp : {}".format(time_stamp))
+
+                #print("box_data : {}".format(box_data))
+                for j in range(1, len(box_data)):
+                    det = box_data[j]
+                    id, x1, y1, x2, y2 = [int(p) for p in det]
+                    yolo_dataset[yolo_id].append([x1, y1, x2, y2, id])
+
+        #print("yolo_dataset : {}".format(yolo_dataset))
+        #print("yolo_time_stamp : {}".format(yolo_time_stamp))
+
+
+        # pull beacon information
+        beacon = DAN.pull('Loc-O')
+
+        # beacon information
+        if beacon != None:
+
+            #print("pull beacon information")
+            #rint(box)
+
+            beacon_list = ast.literal_eval(beacon[0])
+            beacon_time_stamp = beacon_list[0]
+
+            #print('frame: {}'.format(frame_id))
+
+            for i in range(1, len(beacon_list)):
+
+                location = beacon_list[i]
+                room_id, user_id, x, y = [int(p) for p in location]
+                room_id = room_id
+                user_id = user_id
+                
+                if room_id not in beacon_dataset:
+                    beacon_dataset[room_id] = {}
+                beacon_dataset[room_id][user_id] = [x, y]
+
+        # pull cmd information
+        cmd = DAN.pull('Cmd-O')
+
+        # cmd information
+        if cmd != None:
+
+            #print("pull cmd information")
+            #rint(box)
+
+            cmd_list = ast.literal_eval(cmd[0])
+            cmd_room_id = cmd_list[0]
+
+            #print('frame: {}'.format(frame_id))
+
+            for user_id in cmd_list[1]:
+
+                enable_ids.append(user_id)
+
+        return (yolo_time_stamp, yolo_dataset, beacon_time_stamp, beacon_dataset, cmd_room_id, enable_ids)
+
+    except Exception as e:
+        print(e)
+        if str(e).find('mac_addr not found:') != -1:
+            print('Reg_addr is not found. Try to re-register...')
+            DAN.device_registration_with_retry(ServerURL, Reg_addr)
+        else:
+            print('Connection failed due to unknow reasons.')
+            #time.sleep(1)    
+
+    #time.sleep(0.02)
+    return None
+
 def receive_data_from_iottalk():
 
     #print('start receive frame from iottalk')

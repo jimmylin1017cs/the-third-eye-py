@@ -76,7 +76,22 @@ if __name__ == "__main__":
         time_stamp = time.time()
         fps = 1 / (time_stamp - prev_time_stamp)'''
 
-        yolo_time_stamp, yolo_dataset, location_time_stamp, beacon_dataset, cmd_room_id, enable_ids = DAI_pull.receive_all_data_from_iottalk()
+        #print(prev_time_stamp)
+        #print(time_stamp)
+
+        #print("FPS : {}".format(str(fps)))
+
+        #frame_time_stamp = frame_receiver.get_frame_time_stamp()
+        #frame_time_stamp = str(frame_time_stamp)
+        frame_buffer = frame_receiver.get_frame_buffer()
+        #time.sleep(1)
+        frame_yolo_id, frame_time_stamp, track_bbs_ids, location_time_stamp, beacon_dataset, cmd_room_id, enable_ids = DAI_pull.receive_data_from_iottalk()
+        frame_time_stamp = str(frame_time_stamp)
+        #print(frame_time_stamp)
+        #print(track_bbs_ids)
+        #print(frame_buffer)
+
+        #yolo_ids = [frame_yolo_id]
 
         if location_time_stamp is None:
             beacon_dataset = prev_beacon_dataset
@@ -92,15 +107,8 @@ if __name__ == "__main__":
             for user_id in enable_ids:
                 enable_usernames[cmd_room_id].append(username_table[user_id])
 
-        for frame_yolo_id in yolo_time_stamp.keys():
-
-            #print("yolo_dataset : {}".format(yolo_dataset))
-            #print("yolo_time_stamp : {}".format(yolo_time_stamp))
-
-            track_bbs_ids = yolo_dataset[frame_yolo_id]
-
-            frame_time_stamp = str(yolo_time_stamp[frame_yolo_id])
-
+        #for yolo_id in yolo_ids:
+        if frame_yolo_id is not None:
             yolo_id = frame_yolo_id
 
             fm = call_fusion_models[yolo_id]
@@ -110,41 +118,59 @@ if __name__ == "__main__":
             else:
                 enable_username = []
 
-            print("frame_yolo_id : {}".format(frame_yolo_id))
-            #print(frame_buffer.keys())
+            if frame_buffer is not None:
 
-            frame = frame_receiver.get_target_frame(yolo_id, frame_time_stamp)
+                if yolo_id in frame_buffer:
 
-            if frame is not None:
-                
-                if yolo_id in beacon_dataset:
-                    fusion_result = fm.do_fusion_model(track_bbs_ids, beacon_dataset[yolo_id])
-                else:
-                    fusion_result = fm.do_fusion_model(track_bbs_ids, {})
-                #print("fusion_result : {}".format(fusion_result))
-                #print("yolo_id : {}\nframe_buffer.keys() : {}".format(yolo_id, frame_buffer.keys()))
-                frame = draw_utils.draw_fusion_box_select_username(frame, fusion_result, enable_username)
+                    frame_buffer = frame_buffer[yolo_id]
 
-                #print(fm.get_yolo_history())
+                    #frame_buffer[frame_time_stamp] = frame
 
-                prev_time_stamp = time_stamp
-                time_stamp = time.time()
-                fps = 1 / (time_stamp - prev_time_stamp)
+                    #print(frame_buffer[1])
 
-                print("FPS : {}".format(str(fps)))
-
-                if ENABLE_SENDER:
-                    #room_id = 1
-                    room_id = fm.get_room_id()
-                    print("room_id : {}".format(room_id))
-                    sender.send_frame(room_id, time_stamp, frame)
-
-                if SHOW_PREVIEW:
-                    cv2.namedWindow("preview",0)
+                    '''cv2.namedWindow("preview",0)
                     cv2.resizeWindow("preview", 640, 480)
-                    cv2.imshow("preview", frame)
+                    cv2.imshow("preview", frame_buffer)
 
                     k = cv2.waitKey(1)
                     if k == 0xFF & ord("q"):
-                        break
+                        break'''
+
+                    if frame_time_stamp is not None and frame_time_stamp in frame_buffer:
                         
+                        #print("enable_username : {}".format(enable_username))
+                        #print(frame_time_stamp)
+                        #print(track_bbs_ids)
+
+                        #beacon_dataset = fusion_model.get_beacon_data()
+                        #fusion_result = fusion_model.fusion_model(track_bbs_ids, beacon_dataset)
+                        if yolo_id in beacon_dataset:
+                            fusion_result = fm.do_fusion_model(track_bbs_ids, beacon_dataset[yolo_id])
+                        else:
+                            fusion_result = fm.do_fusion_model(track_bbs_ids, {})
+                        #print("fusion_result : {}".format(fusion_result))
+                        #print("yolo_id : {}\nframe_buffer.keys() : {}".format(yolo_id, frame_buffer.keys()))
+                        frame = draw_utils.draw_fusion_box_select_username(frame_buffer[frame_time_stamp], fusion_result, enable_username)
+
+                        #print(fm.get_yolo_history())
+
+                        prev_time_stamp = time_stamp
+                        time_stamp = time.time()
+                        fps = 1 / (time_stamp - prev_time_stamp)
+
+                        print("FPS : {}".format(str(fps)))
+
+                        if ENABLE_SENDER:
+                            #room_id = 1
+                            room_id = fm.get_room_id()
+                            print("room_id : {}".format(room_id))
+                            sender.send_frame(room_id, time_stamp, frame)
+
+                        if SHOW_PREVIEW:
+                            cv2.namedWindow("preview",0)
+                            cv2.resizeWindow("preview", 640, 480)
+                            cv2.imshow("preview", frame)
+
+                            k = cv2.waitKey(1)
+                            if k == 0xFF & ord("q"):
+                                break

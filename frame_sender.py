@@ -21,16 +21,24 @@ class FrameSender():
             sys.exit()
 
     def send_frame(self, client_id, time_stamp, frame):
-
+        start_time = time.time()
         jpg_string = cv2.imencode('.jpg', frame)[1].tostring()
 
-        packet = struct.pack('I', client_id) + struct.pack('d', time_stamp) + struct.pack('I', len(jpg_string)) + jpg_string
+        end_time = time.time()
+        print("imencode Time : {}".format((end_time - start_time)))
 
+        #start_time = time.time()
+        packet = struct.pack('I', client_id) + struct.pack('d', time_stamp) + struct.pack('I', len(jpg_string)) + jpg_string
+        #end_time = time.time()
+        #print("pack Time : {}".format((end_time - start_time)))
         #print("packet length : {}".format(len(packet)))
 
         #jpg_string = jpg_string.encode()
 
+        #start_time = time.time()      
         send_byte = self.s.sendall(packet)
+        #end_time = time.time()
+        #print("sendall Time : {}".format((end_time - start_time)))
 
         #print("send_byte: {}".format(send_byte))
 
