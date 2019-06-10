@@ -60,10 +60,14 @@ if ENABLE_IOTTALK:
 # -------------------------- Display_Function ----------------------------------
 
 SHOW_PREVIEW = config.getboolean('Display_Function', 'Show_Preview')
+DRAW_YOLO_PATH = config.getboolean('Display_Function', 'Draw_Yolo_Path')
+DRAW_BEACON_PATH = config.getboolean('Display_Function', 'Draw_Beacon_Path')
 SAVE_VIDEO = config.getboolean('Display_Function', 'Save_Video')
 SAVE_DATA = config.getboolean('Display_Function', 'Save_Data')
 
 print("SHOW_PREVIEW = {}".format(SHOW_PREVIEW))
+print("DRAW_YOLO_PATH = {}".format(DRAW_YOLO_PATH))
+print("DRAW_BEACON_PATH = {}".format(DRAW_BEACON_PATH))
 print("SAVE_VIDEO = {}".format(SAVE_VIDEO))
 print("SAVE_DATA = {}".format(SAVE_DATA))
 
@@ -86,6 +90,10 @@ if __name__ == "__main__":
 
     if ENABLE_IOTTALK:
         DAI_pull.init_iottalk(IOTTALK_IP, IOTTALK_PORT, REGISTER_ADDRESS)
+
+    # initial save data
+    if SAVE_DATA:
+        beacon_data_file = None
 
     # initial fusion model
     username_table = fusion_models.FusionModel.get_username_table()
@@ -132,11 +140,31 @@ if __name__ == "__main__":
             #print("yolo_dataset : {}".format(yolo_dataset))
             #print("yolo_time_stamp : {}".format(yolo_time_stamp))
 
+            # get yolo data
             track_bbs_ids = yolo_dataset[frame_yolo_id]
-
+            # get yolo frame time stamp
             frame_time_stamp = str(yolo_time_stamp[frame_yolo_id])
-
+            # set yolo id
             yolo_id = frame_yolo_id
+
+            # =========================================== Save Data File ==============================================
+
+            if SAVE_DATA:
+                
+                if beacon_data_file is None and location_time_stamp is not None:
+                    beacon_data_file = open("save/beacon_" + str(location_time_stamp) + ".log", 'w')
+                if beacon_data_file is not None and location_time_stamp is not None:
+                    beacon_data_file.write("{}\n".format(str(location_time_stamp)))
+                    for room_id in beacon_dataset:
+                        beacon_data = beacon_dataset[room_id]
+                        beacon_data_file.write("{} {}\n".format(str(room_id), str(len(beacon_data))))
+                        for user_id in beacon_data:
+                            x = beacon_data[user_id][0]
+                            y = beacon_data[user_id][1]
+                            data_log = [user_id, x, y]
+                            beacon_data_file.write("{}\n".format(str(data_log)))
+
+            # =========================================== Save Data File End ==============================================
 
             fm = call_fusion_models[yolo_id]
 
@@ -159,6 +187,11 @@ if __name__ == "__main__":
                 #print("fusion_result : {}".format(fusion_result))
                 #print("yolo_id : {}\nframe_buffer.keys() : {}".format(yolo_id, frame_buffer.keys()))
                 frame = draw_utils.draw_fusion_box_select_username(frame, fusion_result, enable_username)
+
+                if DRAW_YOLO_PATH:
+                    frame = draw_utils.draw_yolo_path(frame, fm.get_yolo_history())
+                if DRAW_BEACON_PATH:
+                    frame = draw_utils.draw_beacon_path(frame, fm.get_beacon_history())
 
                 #print(fm.get_yolo_history())
 

@@ -253,6 +253,19 @@ class FusionModel():
 
             fusion_result.append([x1, y1, x2, y2, username])
 
+        for beacon_id in self.beacon_history.keys():
+            b = self.beacon_history[beacon_id]
+            b_len = len(b)
+
+            if b_len > self.funsion_windows:
+                self.beacon_history[beacon_id] = b[-self.funsion_windows:]
+
+        for yolo_id in self.yolo_history.keys():
+            p = self.yolo_history[yolo_id]
+            p_len = len(p)
+            if p_len > self.funsion_windows:
+                self.yolo_history[yolo_id] = p[-self.funsion_windows:]
+
         return fusion_result
 
 if __name__ == "__main__":
