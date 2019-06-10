@@ -34,19 +34,21 @@ sudo pip3 install fastdtw
 - Yolo Server Port `8091`
 - Display Server Port `8092`
 - Stream Server Port `8090`
+- Check Box Port `8099`
+    - URL `/fusion/<int:room_id>`
 
 ## Run
+
+- Command (Selector)
+
+```
+python3 checkbox_web.py
+```
 
 - Stream Server
 
 ```
 python3 mjpeg_streamer.py
-```
-
-- Yolo Client
-
-```
-python3 yolo_detector.py
 ```
 
 - Display Server
@@ -55,14 +57,36 @@ python3 yolo_detector.py
 python3 yolo_display.py
 ```
 
+- Yolo Server
+
+```
+python3 yolo_server.py
+```
+
 - Location
 
 ```
 python3 DAI_push_location.py
 ```
 
-- Command (Selector)
+- Yolo Client
+
+```
+python3 yolo_detector.py
+```
+
+### All Command
 
 ```
 python3 checkbox_web.py
+python3 mjpeg_streamer.py
+python3 yolo_display.py
+python3 yolo_server.py
+python3 DAI_push_location.py
+python3 yolo_detector.py
 ```
+
+### Flow
+
+`Yolo Client` -> `Yolo Server` -> `Display Server` -> `Stream Server`
+
