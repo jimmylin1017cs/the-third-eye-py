@@ -22,12 +22,12 @@
               {% if username in g.enable_list %}
               <div class="custom-control custom-checkbox">
                   <input type="checkbox" name="person" class="custom-control-input" id={{ username }} value={{ username }} checked>
-                  <label class="custom-control-label" for={{ username }}>{{ username }}</label>
+                  <label class="custom-control-label" for={{ username }}><h3>{{ username }}</h3></label>
               </div>
               {% else %}
               <div class="custom-control custom-checkbox">
                   <input type="checkbox" name="person" class="custom-control-input" id={{ username }} value={{ username }}>
-                  <label class="custom-control-label" for={{ username }}>{{ username }}</label>
+                  <label class="custom-control-label" for={{ username }}><h3>{{ username }}</h3></label>
               </div>
               {% endif %}
           {% endfor %}
@@ -41,5 +41,13 @@
     <script src="{{ url_for('static', filename='js/jquery-3.4.1.slim.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <style>
+      .custom-control-label::before, 
+      .custom-control-label::after {
+        top: .8rem;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    </style>
   </body>
 </html>
