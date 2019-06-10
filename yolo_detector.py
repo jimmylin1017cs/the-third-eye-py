@@ -13,35 +13,59 @@ import frame_sender
 import fusion_model
 import draw_package.draw_utils as draw_utils
 
+# =========================================== Initial Config ==============================================
+
 config = configparser.ConfigParser()
-config.read('detector_config.ini')
+config.read('yolo_detector_config.ini')
+
+# -------------------------- Yolo_Client ----------------------------------
 
 ENABLE_CLIENT = config.getboolean('Yolo_Client', 'Enable_Client') # send data to yolo server
+
+print("ENABLE_CLIENT = {}".format(ENABLE_CLIENT))
 
 if ENABLE_CLIENT:
     DESTINATION_IP = config.get('Yolo_Client', 'Destination_IP')
     DESTINATION_PORT = config.get('Yolo_Client', 'Destination_Port')
     DESTINATION_PORT = int(DESTINATION_PORT)
+    print("DESTINATION_IP = {}".format(DESTINATION_IP))
+    print("DESTINATION_PORT = {}".format(DESTINATION_PORT))
 
-print("ENABLE_CLIENT = {}".format(ENABLE_CLIENT))
+# -------------------------- Frame_Sender ----------------------------------
 
 ENABLE_SENDER = config.getboolean('Frame_Sender', 'Enable_Sender') # send frame to display server
+
+print("ENABLE_SENDER = {}".format(ENABLE_SENDER))
 
 if ENABLE_SENDER:
     RECEIVER_IP = config.get('Frame_Sender', 'Receiver_IP')
     RECEIVER_PORT = config.get('Frame_Sender', 'Receiver_Port')
     RECEIVER_PORT = int(RECEIVER_PORT)
 
-print("ENABLE_SENDER = {}".format(ENABLE_SENDER))
+    print("RECEIVER_IP = {}".format(RECEIVER_IP))
+    print("RECEIVER_PORT = {}".format(RECEIVER_PORT))
+
+# -------------------------- IoTTalk_Config ----------------------------------
 
 ENABLE_IOTTALK = config.getboolean('IoTTalk_Config', 'Enable_IoTTalk')
 
 print("ENABLE_IOTTALK = {}".format(ENABLE_IOTTALK))
 
+if ENABLE_IOTTALK:
+    IOTTALK_IP = config.get('IoTTalk_Config', 'IoTTalk_IP')
+    IOTTALK_PORT = config.get('IoTTalk_Config', 'IoTTalk_Port')
+    REGISTER_ADDRESS = config.get('IoTTalk_Config', 'Register_Address')
+
+    print("ENABLE_IOTTALK = {}".format(ENABLE_IOTTALK))
+    print("IOTTALK_IP = {}".format(IOTTALK_IP))
+    print("IOTTALK_PORT = {}".format(IOTTALK_PORT))
+    print("REGISTER_ADDRESS = {}".format(REGISTER_ADDRESS))
+
+# -------------------------- Yolo_Function ----------------------------------
+
 ENABLE_FUSION_MODEL = config.getboolean('Yolo_Function', 'Enable_Fusion_Model')
 ENABLE_SORT_ALGORITHM = config.getboolean('Yolo_Function', 'Enable_Sort_Algorithm')
 ENABLE_DRAW_BOX = config.getboolean('Yolo_Function', 'Enable_Draw_Box')
-
 
 print("ENABLE_FUSION_MODEL = {}".format(ENABLE_FUSION_MODEL))
 print("ENABLE_SORT_ALGORITHM = {}".format(ENABLE_SORT_ALGORITHM))
@@ -50,12 +74,17 @@ print("ENABLE_DRAW_BOX = {}".format(ENABLE_DRAW_BOX))
 SHOW_PREVIEW = config.getboolean('Yolo_Function', 'Show_Preview')
 SAVE_VIDEO = config.getboolean('Yolo_Function', 'Save_Video')
 SAVE_DATA = config.getboolean('Yolo_Function', 'Save_Data')
+
 print("SHOW_PREVIEW = {}".format(SHOW_PREVIEW))
 print("SAVE_VIDEO = {}".format(SAVE_VIDEO))
 print("SAVE_DATA = {}".format(SAVE_DATA))
 
+# -------------------------- Yolo_Config ----------------------------------
+
 YOLO_ID = config.get('Yolo_Config', 'Yolo_ID')
 YOLO_ID = int(YOLO_ID)
+
+# =========================================== Initial Config End ==============================================
 
 category_table = []
 
@@ -140,6 +169,7 @@ if __name__ == "__main__":
     # initial iottalk connection
     if ENABLE_IOTTALK:
         import iottalk_package.DAI_push as DAI_push
+        DAI_push.init_iottalk(IOTTALK_IP, IOTTALK_PORT, REGISTER_ADDRESS)
 
     # initial fusion model
     if ENABLE_FUSION_MODEL:

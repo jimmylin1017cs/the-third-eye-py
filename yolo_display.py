@@ -9,33 +9,65 @@ import frame_sender
 import draw_package.draw_utils as draw_utils
 import iottalk_package.DAI_pull as DAI_pull
 
+# =========================================== Initial Config ==============================================
 
 config = configparser.ConfigParser()
-config.read('display_config.ini')
+config.read('yolo_display_config.ini')
+
+# -------------------------- Display_Server ----------------------------------
 
 ENABLE_SERVER = config.getboolean('Display_Server', 'Enable_Server')
+
+print("ENABLE_SERVER = {}".format(ENABLE_SERVER))
+
 if ENABLE_SERVER:
     SERVER_IP = config.get('Display_Server', 'Server_IP')
     SERVER_PORT = config.get('Display_Server', 'Server_Port')
     SERVER_PORT = int(SERVER_PORT)
 
-print("ENABLE_SERVER = {}".format(ENABLE_SERVER))
+    print("SERVER_IP = {}".format(SERVER_IP))
+    print("SERVER_PORT = {}".format(SERVER_PORT))
+
+# -------------------------- Frame_Sender ----------------------------------
 
 ENABLE_SENDER = config.getboolean('Frame_Sender', 'Enable_Sender') # send frame to server
+
+print("ENABLE_SENDER = {}".format(ENABLE_SENDER))
 
 if ENABLE_SENDER:
     RECEIVER_IP = config.get('Frame_Sender', 'Receiver_IP')
     RECEIVER_PORT = config.get('Frame_Sender', 'Receiver_Port')
     RECEIVER_PORT = int(RECEIVER_PORT)
 
-print("ENABLE_SENDER = {}".format(ENABLE_SENDER))
+    print("RECEIVER_IP = {}".format(RECEIVER_IP))
+    print("RECEIVER_PORT = {}".format(RECEIVER_PORT))
+
+# -------------------------- IoTTalk_Config ----------------------------------
+
+ENABLE_IOTTALK = config.getboolean('IoTTalk_Config', 'Enable_IoTTalk')
+
+print("ENABLE_IOTTALK = {}".format(ENABLE_IOTTALK))
+
+if ENABLE_IOTTALK:
+    IOTTALK_IP = config.get('IoTTalk_Config', 'IoTTalk_IP')
+    IOTTALK_PORT = config.get('IoTTalk_Config', 'IoTTalk_Port')
+    REGISTER_ADDRESS = config.get('IoTTalk_Config', 'Register_Address')
+
+    print("IOTTALK_IP = {}".format(IOTTALK_IP))
+    print("IOTTALK_PORT = {}".format(IOTTALK_PORT))
+    print("REGISTER_ADDRESS = {}".format(REGISTER_ADDRESS))
+
+# -------------------------- Display_Function ----------------------------------
 
 SHOW_PREVIEW = config.getboolean('Display_Function', 'Show_Preview')
 SAVE_VIDEO = config.getboolean('Display_Function', 'Save_Video')
 SAVE_DATA = config.getboolean('Display_Function', 'Save_Data')
+
 print("SHOW_PREVIEW = {}".format(SHOW_PREVIEW))
 print("SAVE_VIDEO = {}".format(SAVE_VIDEO))
 print("SAVE_DATA = {}".format(SAVE_DATA))
+
+# =========================================== Initial Config End ==============================================
 
 if __name__ == "__main__":
     
@@ -51,6 +83,9 @@ if __name__ == "__main__":
         dest_port = RECEIVER_PORT
         sender = frame_sender.FrameSender(dest_ip, dest_port)
         sender.start()
+
+    if ENABLE_IOTTALK:
+        DAI_pull.init_iottalk(IOTTALK_IP, IOTTALK_PORT, REGISTER_ADDRESS)
 
     # initial fusion model
     username_table = fusion_models.FusionModel.get_username_table()

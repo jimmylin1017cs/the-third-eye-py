@@ -6,7 +6,48 @@ import time
 import threading
 import struct
 import ast
+import configparser
 
+import iottalk_package.DAI_push as DAI_push
+
+# =========================================== Initial Config ==============================================
+
+config = configparser.ConfigParser()
+config.read('yolo_server_config.ini')
+
+# -------------------------- Yolo_Server ----------------------------------
+
+ENABLE_SERVER = config.getboolean('Yolo_Server', 'Enable_Server')
+
+print("ENABLE_SERVER = {}".format(ENABLE_SERVER))
+
+if ENABLE_SERVER:
+    SERVER_IP = config.get('Yolo_Server', 'Server_IP')
+    SERVER_PORT = config.get('Yolo_Server', 'Server_Port')
+    SERVER_PORT = int(SERVER_PORT)
+
+    print("SERVER_IP = {}".format(SERVER_IP))
+    print("SERVER_PORT = {}".format(SERVER_PORT))
+
+# -------------------------- IoTTalk_Config ----------------------------------
+
+ENABLE_IOTTALK = config.getboolean('IoTTalk_Config', 'Enable_IoTTalk')
+
+print("ENABLE_IOTTALK = {}".format(ENABLE_IOTTALK))
+
+if ENABLE_IOTTALK:
+    IOTTALK_IP = config.get('IoTTalk_Config', 'IoTTalk_IP')
+    IOTTALK_PORT = config.get('IoTTalk_Config', 'IoTTalk_Port')
+
+    REGISTER_ADDRESS = config.get('IoTTalk_Config', 'Register_Address')
+
+    print("IOTTALK_IP = {}".format(IOTTALK_IP))
+    print("IOTTALK_PORT = {}".format(IOTTALK_PORT))
+    print("REGISTER_ADDRESS = {}".format(REGISTER_ADDRESS))
+
+# =========================================== Initial Config End ==============================================
+
+# Golbal Lock for frame_buffer
 yolo_server_lock = threading.Lock()
 
 class YoloServer(threading.Thread):
@@ -202,11 +243,11 @@ if __name__ == "__main__":
     host = "0.0.0.0"
     port = 8093
 
-    YoloServer(host, port).start()
+    if ENABLE_SERVER:
+        YoloServer(host, port).start()
 
-    cv2_windows_conrtol = []
-
-    import iottalk_package.DAI_push as DAI_push
+    if ENABLE_IOTTALK:
+        DAI_push.init_iottalk(IOTTALK_IP, IOTTALK_PORT, REGISTER_ADDRESS)
 
     while True:
 
@@ -233,34 +274,5 @@ if __name__ == "__main__":
 
             print("data_list : {}".format(data_list))
 
-            DAI_push.send_all_data_to_iottalk(data_list)
-
-            '''for client_id in data_buffer.keys():
-
-                #print("client_id : {}".format(client_id))
-
-                if client_id not in cv2_windows_conrtol:
-                    cv2_windows_conrtol.append(client_id)
-                
-                if data_buffer[client_id]:
-                    time_stamp = list(data_buffer[client_id].keys())
-                    time_stamp.sort()
-                    #print(time_stamp[-1])
-                    frame = data_buffer[client_id][time_stamp[-1]]
-
-                    if frame is not None:
-                        window_name = "preview_" + str(client_id)
-                        cv2.namedWindow(window_name, 0)
-                        cv2.resizeWindow(window_name, 640, 480)
-                        cv2.imshow(window_name, frame)
-
-                        k = cv2.waitKey(1)
-                        if k == 0xFF & ord("q"):
-                            break
-
-            client_ids = cv2_windows_conrtol.copy()
-            for client_id in client_ids:
-                if client_id not in data_buffer:
-                    window_name = "preview_" + str(client_id)
-                    cv2.destroyWindow(window_name)
-                    cv2_windows_conrtol.remove(client_id)'''
+            if ENABLE_IOTTALK:
+                DAI_push.send_all_data_to_iottalk(data_list)

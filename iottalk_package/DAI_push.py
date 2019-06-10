@@ -1,29 +1,18 @@
 import iottalk_package.DAN as DAN
 import time, requests, random
-import json
 import numpy as np
 import cv2
-import base64
 from ast import literal_eval
 
-#from requests.utils import requote_uri
+def init_iottalk(IoTTalk_IP, IoTTalk_Port, Register_Address):
 
-#ServerURL = 'http://IP:9999' #with no secure connection
-#ServerURL = 'https://DomainName' #with SSL connection
-ServerURL = 'http://192.168.1.134:9999'
-#Reg_addr = None #if None, Reg_addr = MAC address
-Reg_addr = "B06EBF60297E"
+    ServerURL = 'http://' + IoTTalk_IP + ':' + str(IoTTalk_Port)
+    Reg_addr = Register_Address
 
-#DAN.profile['dm_name']='HumanBox'
-#DAN.profile['df_list']=['BoxCoord-I', 'BoxID-I', 'FrameID-I']
-DAN.profile['dm_name']='ObjBox'
-DAN.profile['df_list']=['Box-I']
-DAN.profile['d_name']= None # None for autoNaming
-DAN.device_registration_with_retry(ServerURL, Reg_addr)
-
-#cv2.setUseOptimized(True)
-
-#cap = cv2.VideoCapture('time_counter.flv')
+    DAN.profile['dm_name']='ObjID'
+    DAN.profile['df_list']=['Box-I']
+    DAN.profile['d_name']= None # None for autoNaming
+    DAN.device_registration_with_retry(ServerURL, Reg_addr)
 
 def send_all_data_to_iottalk(data_list):
 
