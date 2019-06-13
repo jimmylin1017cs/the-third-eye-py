@@ -103,6 +103,9 @@ if __name__ == "__main__":
     port = 8099
 
     cbs = CheckBoxServer(host, port)
-    cbs.add_name_list(1, CheckBoxServer.username_table.keys())
-    cbs.add_name_list(2, CheckBoxServer.username_table.keys())
+    tmp_name_list = list(CheckBoxServer.username_table.keys())
+    tmp_name_list.sort()
+    print(tmp_name_list)
+    cbs.add_name_list(1, tmp_name_list)
+    cbs.add_name_list(2, tmp_name_list)
     cbs.start()

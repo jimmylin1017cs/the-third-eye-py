@@ -1,0 +1,10 @@
+0=Unknown
+1=Apple
+2=Banana
+3=Cherry
+4=Grapes
+5=Litchi
+6=Mango
+7=Orange
+8=Peach
+9=Watermelon

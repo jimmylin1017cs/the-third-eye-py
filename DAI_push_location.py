@@ -17,6 +17,8 @@ DAN.device_registration_with_retry(ServerURL, Reg_addr)
 
 beacon_data_dir = "beacon_dataset/"
 
+SAVE_DATA = False
+
 def get_beacon_data():
 
     beacon_dataset = dict()
@@ -42,16 +44,16 @@ def get_beacon_data():
 
     return beacon_dataset
 
-def send_location_to_iottalk(beacon_dataset):
+def send_location_to_iottalk(time_stamp, beacon_dataset):
 
     try:
-        location = [time.time()]
+        location = [time_stamp]
         for user_id in beacon_dataset.keys():
             room_id = beacon_dataset[user_id][0]
             position = beacon_dataset[user_id][1]
             location.append([int(room_id), int(user_id), position[0], position[1]])
 
-        print(location)
+        #print(location)
 
         DAN.push('Loc-I', str(location))
     except Exception as e:
@@ -67,10 +69,39 @@ def send_location_to_iottalk(beacon_dataset):
 
 def main():
     
+    # initial save data
+    if SAVE_DATA:
+        beacon_data_file = None
+
     while True:
 
+        time_stamp = time.time()
         beacon_dataset = get_beacon_data()
-        send_location_to_iottalk(beacon_dataset)
+
+        print(beacon_dataset)
+
+        # =========================================== Save Data File ==============================================
+
+        if SAVE_DATA:
+            
+            if beacon_data_file is None:
+                beacon_data_file = open("save/beacon_" + str(time_stamp) + ".log", 'w')
+
+            if beacon_data_file is not None:
+                beacon_data_file.write("{}\n".format(str(time_stamp)))
+                user_ids = list(beacon_dataset.keys())
+                user_ids.sort()
+                for user_id in user_ids:
+                    room_id = beacon_dataset[user_id][0]
+                    position = beacon_dataset[user_id][1]
+                    x = position[0]
+                    y = position[1]
+                    data_log = str(user_id) + '=' + str([room_id, x, y])
+                    beacon_data_file.write("{}\n".format(data_log))
+
+        # =========================================== Save Data File End ==============================================
+        
+        send_location_to_iottalk(time_stamp, beacon_dataset)
 
 if __name__ == '__main__':
     main()
